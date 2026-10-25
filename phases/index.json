@@ -24,6 +24,10 @@
       "dir": "4-loop-chainfix",
       "status": "completed",
       "completed_at": "2026-10-25T23:32:52+0900"
+    },
+    {
+      "dir": "5-loop-evidence",
+      "status": "pending"
     }
   ]
 }

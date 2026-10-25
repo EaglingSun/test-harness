@@ -1,0 +1,7 @@
+{
+  "project": "pr-reviewer",
+  "phase": "5-loop-evidence",
+  "steps": [
+    { "step": 0, "name": "gate-evidence-upload", "status": "pending" }
+  ]
+}
