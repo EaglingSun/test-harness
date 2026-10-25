@@ -2,12 +2,43 @@
   "project": "pr-reviewer",
   "phase": "0-mvp",
   "steps": [
-    { "step": 0, "name": "diff-parser", "status": "pending" },
-    { "step": 1, "name": "github-client", "status": "pending" },
-    { "step": 2, "name": "junit-report", "status": "pending" },
-    { "step": 3, "name": "agent-runner", "status": "pending" },
-    { "step": 4, "name": "review-agents", "status": "pending" },
-    { "step": 5, "name": "aggregator", "status": "pending" },
-    { "step": 6, "name": "cli-wiring", "status": "pending" }
-  ]
+    {
+      "step": 0,
+      "name": "diff-parser",
+      "status": "completed",
+      "started_at": "2026-10-25T16:09:12+0900",
+      "summary": "pyproject(pythonpath), models.py 계약 dataclass, proc.py Runner/run_process, diff.py parse_commentable_lines(RIGHT side, rename/삭제/binary/CRLF/,d 생략 처리) + tests/test_diff.py 12건"
+    },
+    {
+      "step": 1,
+      "name": "github-client",
+      "status": "pending"
+    },
+    {
+      "step": 2,
+      "name": "junit-report",
+      "status": "pending"
+    },
+    {
+      "step": 3,
+      "name": "agent-runner",
+      "status": "pending"
+    },
+    {
+      "step": 4,
+      "name": "review-agents",
+      "status": "pending"
+    },
+    {
+      "step": 5,
+      "name": "aggregator",
+      "status": "pending"
+    },
+    {
+      "step": 6,
+      "name": "cli-wiring",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-10-25T16:09:12+0900"
 }
