@@ -217,6 +217,34 @@ def test_test_job_uploads_junit(jobs):
     assert "loop-junit" in names
 
 
+# 빌드가 깨지면 JUnit XML 이 없다. loop-junit 이 error 면 test job 이 실패해 뒤 job 이 전부 skip 되고,
+# 게이트가 판정 불가(loop-test status: "error")를 판정하지 못한다(ADR-006 · ADR-007).
+# E2E 근거: 리허설 저장소 PR #10 (run 40202995243). 계약 JSON upload 는 파일이 없으면 실패가 맞으므로 error 유지.
+def test_junit_upload_warns_contract_uploads_error(jobs):
+    uploads = [s["with"] for s in all_steps(jobs) if s.get("uses") == UPLOAD]
+    junit = [w for w in uploads if w["name"] == "loop-junit"]
+    assert len(junit) == 1
+    assert junit[0]["if-no-files-found"] == "warn"
+    contracts = [w for w in uploads if w["name"] != "loop-junit"]
+    assert {w["name"] for w in contracts} == set(UPLOADS.values())
+    for w in contracts:
+        assert w["if-no-files-found"] == "error", f"{w['name']}: 계약 upload 는 error"
+
+
+# 게이트가 BLOCK(exit 1)이면 뒤 upload step 이 기본 조건 success() 로 건너뛰어져 BLOCK 근거(reason)가 남지 않는다.
+# E2E 근거: 리허설 저장소 PR #6 (run 40202825571) — loop-gate-merge artifact 없음.
+# 게이트 step 은 exit 1 그대로(빨간 체크, ADR-006). if: always() 는 취소된 run 에서도 돌므로 쓰지 않는다.
+@pytest.mark.parametrize("name", ["autofix-gate", "merge-gate", "release-gate"])
+def test_gate_upload_survives_block(jobs, name):
+    uploads = [s for s in jobs[name]["steps"] if s.get("uses") == UPLOAD]
+    assert len(uploads) == 1
+    cond = uploads[0].get("if", "")
+    assert "!cancelled()" in cond, f"{name}: upload 에 !cancelled() 없음"
+    assert "always()" not in cond, f"{name}: always() 금지"
+    gate = [s for s in jobs[name]["steps"] if "py -m loop.gate" in s.get("run", "")]
+    assert "continue-on-error" not in gate[0]  # BLOCK 은 빨간 체크로 보여야 한다
+
+
 @pytest.mark.parametrize("name", ["autofix-gate", "merge-gate", "release-gate"])
 def test_gate_step_passes_repo_and_pr(jobs, name):
     gate = [s for s in jobs[name]["steps"] if "py -m loop.gate" in s.get("run", "")]
