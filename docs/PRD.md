@@ -26,6 +26,7 @@ GitHub PR 한 건에 대해 관점이 다른 리뷰 에이전트 3개를 병렬�
 | R8 | workflow 틀 `loop/templates/pr-loop.yml`: 한 workflow 안 job 체인(test → review → autofix-gate → fix → reverify → merge-gate → merge → release-gate → release), self-hosted, 고정 SHA | `pytest -q tests/test_loop_workflow.py` |
 | R9 | `pr_reviewer` CLI 옵션 `--junit-dir PATH`(로컬 JUnit) · `--plan-out PATH`(payload JSON 저장) · `--current-user LOGIN`(`gh api user` 생략) | `pytest -q tests/test_cli.py` |
 | R10 | 루프 review 단계 real 모드: `pr_reviewer`를 R9 옵션으로 실행하고 결과를 review 계약 JSON으로 변환 | `pytest -q tests/test_loop_review.py` |
+| R11 | 게이트 강제 스위치(멈추는 장치): 실행 시점 PR 라벨 `force-block-<게이트>`가 있으면 그 게이트가 BLOCK. 라벨 조회 실패는 fail-closed. workflow는 `labeled`(force-block-* 만)로 다시 돈다 | `pytest -q tests/test_loop_gate_switch.py tests/test_loop_workflow.py` |
 
 ## MVP 제외 사항
 - GitHub Actions/Webhook 자동 트리거 — 필요하면 PROPOSALS.md로 (2026-10-25: self-hosted PR 루프 R7~R10으로 일부 편입)

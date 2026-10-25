@@ -1,0 +1,8 @@
+{
+  "project": "pr-reviewer",
+  "phase": "2-loop-stop",
+  "steps": [
+    { "step": 0, "name": "gate-switch", "status": "pending" },
+    { "step": 1, "name": "workflow-labels", "status": "pending" }
+  ]
+}

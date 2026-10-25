@@ -9,6 +9,10 @@
       "dir": "1-loop-nogate",
       "status": "completed",
       "completed_at": "2026-10-25T22:58:35+0900"
+    },
+    {
+      "dir": "2-loop-stop",
+      "status": "pending"
     }
   ]
 }
