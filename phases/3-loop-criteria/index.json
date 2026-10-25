@@ -7,7 +7,8 @@
       "name": "gate-criteria",
       "status": "completed",
       "started_at": "2026-10-25T23:17:27+0900",
-      "summary": "loop/gate.py 에 1차 임시 기준(decide_autofix/decide_merge/decide_release 순수 함수, AUTOFIX_MAX=3, merge upstream +review · release upstream +gate-merge, 강제 스위치 우선, degraded 전파) · run_local reverify-results/ 지원 · fixture new-defect/fixed-unlisted/fixed-listed/build-broken · test_loop_gate_criteria.py + run_local 흐름 5건. 무게이트 의도 변경: gate_switch 의 reason=='무게이트' assert → 기준 decision(autofix=AUTO_FIX) 검사, upstream 데이터에 test unexpected 1건·gate-merge 추가, fail-closed 테스트는 미리 둔 gate-merge.json 삭제 후 검사; stages 의 upstream 목록·merge PASS 테스트에 review 추가; run_local force-block-merge 의 fix!=skipped → reverify!=skipped(basic 은 NO_ACTION 으로 fix skip). red-green-revert: <=→< 1 fail · missing 검사 제거 3 fail · reverify error→PASS 3 fail, 원복 후 404 passed"
+      "summary": "loop/gate.py 에 1차 임시 기준(decide_autofix/decide_merge/decide_release 순수 함수, AUTOFIX_MAX=3, merge upstream +review · release upstream +gate-merge, 강제 스위치 우선, degraded 전파) · run_local reverify-results/ 지원 · fixture new-defect/fixed-unlisted/fixed-listed/build-broken · test_loop_gate_criteria.py + run_local 흐름 5건. 무게이트 의도 변경: gate_switch 의 reason=='무게이트' assert → 기준 decision(autofix=AUTO_FIX) 검사, upstream 데이터에 test unexpected 1건·gate-merge 추가, fail-closed 테스트는 미리 둔 gate-merge.json 삭제 후 검사; stages 의 upstream 목록·merge PASS 테스트에 review 추가; run_local force-block-merge 의 fix!=skipped → reverify!=skipped(basic 은 NO_ACTION 으로 fix skip). red-green-revert: <=→< 1 fail · missing 검사 제거 3 fail · reverify error→PASS 3 fail, 원복 후 404 passed",
+      "completed_at": "2026-10-25T23:22:15+0900"
     },
     {
       "step": 1,
