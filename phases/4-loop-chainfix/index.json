@@ -2,6 +2,13 @@
   "project": "pr-reviewer",
   "phase": "4-loop-chainfix",
   "steps": [
-    { "step": 0, "name": "skip-chain-fix", "status": "pending" }
-  ]
+    {
+      "step": 0,
+      "name": "skip-chain-fix",
+      "status": "completed",
+      "started_at": "2026-10-25T23:31:20+0900",
+      "summary": "pr-loop.yml merge-gate·merge·release-gate·release 에 `!cancelled() && needs.<직접>.result == 'success'` if 추가(fix skip 시 조상 skip 전파 결함, PR #3) + needs 그래프로 fix 후손을 계산해 검사하는 test_fix_descendants_run_when_fix_skipped 추가. red-green-revert: 수정 전 FAIL(merge-gate) → 수정 후 40 passed → merge if 제거 시 FAIL(merge) → 복원, 전체 421 passed, scope OK"
+    }
+  ],
+  "created_at": "2026-10-25T23:31:20+0900"
 }

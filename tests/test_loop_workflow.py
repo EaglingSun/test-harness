@@ -174,6 +174,33 @@ def test_reverify_runs_when_fix_skipped(jobs):
     assert "needs.fix.result == 'skipped'" in cond
 
 
+def descendants(jobs: dict, root: str) -> list[str]:
+    """needs 그래프에서 root 의 모든 후손 job (workflow 순서)."""
+    found = {root}
+    for name, job in jobs.items():  # job 은 needs 보다 뒤에 정의된다(test_job_chain_matches)
+        if found & set(needs_of(job)):
+            found.add(name)
+    found.discard(root)
+    return [name for name in jobs if name in found]
+
+
+# GitHub Actions 의 job 기본 조건 success() 는 직접 needs 만이 아니라 조상 job 중 하나라도
+# skip/실패면 거짓이다. 그래서 fix 가 skip(go=false)되면 그 후손은 명시적 if 가 없으면 전부 skip 된다.
+# E2E 근거: 리허설 저장소 PR #3 (run 40201593699) — NO_ACTION PR 에서 merge-gate 이후가 모두 skip.
+# 후손 목록은 needs 에서 계산한다(job 이 늘어도 잡히게). if: always() 는 취소된 run 에서도 돌므로 쓰지 않는다.
+def test_fix_descendants_run_when_fix_skipped(jobs):
+    desc = descendants(jobs, "fix")
+    assert desc == ["reverify", "merge-gate", "merge", "release-gate", "release"]
+    for name in desc:
+        cond = jobs[name].get("if", "")
+        assert "!cancelled()" in cond, f"{name}: !cancelled() 없음"
+        assert "always()" not in cond, f"{name}: always() 금지"
+        if name == "reverify":
+            continue  # fix skip 을 직접 허용하는 조건은 test_reverify_runs_when_fix_skipped 가 본다
+        for need in needs_of(jobs[name]):
+            assert f"needs.{need}.result == 'success'" in cond, f"{name}: needs.{need}.result 검사 없음"
+
+
 def test_loop_steps_run_in_loop_home_with_workspace(jobs):
     loop_steps = [s for s in all_steps(jobs) if LOOP_CALL.search(s.get("run", ""))]
     assert len(loop_steps) == len(NEEDS)  # 단계마다 하나
