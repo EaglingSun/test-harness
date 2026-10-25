@@ -45,7 +45,9 @@
     {
       "step": 5,
       "name": "aggregator",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-10-25T16:17:58+0900",
+      "summary": "aggregate.py apply_severity_rules(A line 유→critical/무→major, B/C reachability·failure_scenario 공백 시 강등), build_review_plan(commentable 밖·line None→요약 전용, path+line 병합·최고 등급 배지·등급→category 정렬, 요약 전용 포함 critical로 REQUEST_CHANGES/자기 PR COMMENT fallback, review_body 인라인 건수, 등급×관점 표·skipped/error·report 건수·추정 고지 요약 markdown) + tests/test_aggregate.py 26건"
     },
     {
       "step": 6,
