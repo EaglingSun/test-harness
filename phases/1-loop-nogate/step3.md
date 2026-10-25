@@ -55,7 +55,7 @@ R10
 
 - `loop/review.py`
 - `tests/test_loop_review.py`
-- `tests/fixtures/loop/`
+- `tests/fixtures/loop/*`
 
 ## Acceptance Criteria
 

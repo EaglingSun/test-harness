@@ -1,0 +1,38 @@
+{
+  "event": "REQUEST_CHANGES",
+  "review_body": "리뷰 본문",
+  "inline": [
+    {"path": "src/calc.c", "line": 12, "body": "[보안] 버퍼 오버플로"}
+  ],
+  "summary_markdown": "## 요약",
+  "agents": [
+    {
+      "category": "structural_test",
+      "findings": [],
+      "error": "claude 실행 실패: timeout",
+      "skipped_reason": null
+    },
+    {
+      "category": "security",
+      "findings": [
+        {"category": "security", "path": "src/calc.c", "line": 12, "severity": "critical",
+         "title": "버퍼 오버플로", "body": "b", "failure_scenario": "s", "reachability": "r"},
+        {"category": "security", "path": "src/calc.c", "line": 20, "severity": "major",
+         "title": "입력 검증 누락", "body": "b", "failure_scenario": "s", "reachability": ""}
+      ],
+      "error": null,
+      "skipped_reason": null
+    },
+    {
+      "category": "code_review",
+      "findings": [
+        {"category": "code_review", "path": "src/calc.c", "line": 30, "severity": "major",
+         "title": "경계값 오류", "body": "b", "failure_scenario": "s", "reachability": ""},
+        {"category": "code_review", "path": "src/util.c", "line": null, "severity": "minor",
+         "title": "이름 개선", "body": "b", "failure_scenario": "", "reachability": ""}
+      ],
+      "error": null,
+      "skipped_reason": null
+    }
+  ]
+}
