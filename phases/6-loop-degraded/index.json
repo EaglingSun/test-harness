@@ -1,0 +1,7 @@
+{
+  "project": "pr-reviewer",
+  "phase": "6-loop-degraded",
+  "steps": [
+    { "step": 0, "name": "review-partial-degraded", "status": "pending" }
+  ]
+}

@@ -29,6 +29,10 @@
       "dir": "5-loop-evidence",
       "status": "completed",
       "completed_at": "2026-10-25T23:53:57+0900"
+    },
+    {
+      "dir": "6-loop-degraded",
+      "status": "pending"
     }
   ]
 }

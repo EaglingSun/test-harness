@@ -29,6 +29,7 @@ GitHub PR 한 건에 대해 관점이 다른 리뷰 에이전트 3개를 병렬�
 | R11 | 게이트 강제 스위치(멈추는 장치): 실행 시점 PR 라벨 `force-block-<게이트>`가 있으면 그 게이트가 BLOCK. 라벨 조회 실패는 fail-closed. workflow는 `labeled`(force-block-* 만)로 다시 돈다 | `pytest -q tests/test_loop_gate_switch.py tests/test_loop_workflow.py` |
 | R12 | 게이트 1차 임시 기준(ADR-007 표): autofix = unexpected 건수로 AUTO_FIX/NO_ACTION/NEEDS_HUMAN/NEEDS_INVESTIGATION, merge = reverify ⓐⓒ·목록 미갱신 ⓑ·판정 불가면 BLOCK, release = merge 됨 + reverify 통과. 리뷰 실패는 PASS + degraded | `pytest -q tests/test_loop_gate_criteria.py` |
 | R13 | Fix real 모드(선택): `claude -p` 가 `src/`·`include/` 만 고치고, 바뀐 경로를 코드로 검사한 뒤 commit/push. 기본은 stub | `pytest -q tests/test_loop_fix_real.py` |
+| R14 | 리뷰 부분 실패 degraded: review 계약 `errors`가 1건 이상이면(status ok여도) merge 게이트가 판정은 그대로 두고 `degraded: true`로 표시하고 reason에 부분 실패 건수를 적는다(release까지 전파) | `pytest -q tests/test_loop_gate_criteria.py` |
 
 ## MVP 제외 사항
 - GitHub Actions/Webhook 자동 트리거 — 필요하면 PROPOSALS.md로 (2026-10-25: self-hosted PR 루프 R7~R10으로 일부 편입)
@@ -40,3 +41,4 @@ GitHub PR 한 건에 대해 관점이 다른 리뷰 에이전트 3개를 병렬�
 ## 변경 이력
 - 2026-10-25: 초안 승인
 - 2026-10-25: R7~R10 추가(PR Autofix CI/CD 실습 1차 실측 — `C:\lab\2nd_NGV\docs\plans\2026-10-25-pr-autofix-loop-1차.md`). 실장 대화 승인(위임 D-6 · 「승인」). PROPOSALS P4 범위의 편입이며, P4의 `[x]` 표시는 Human만 하므로 건드리지 않았다.
+- 2026-10-26: R14 추가(loop-실습구조.md §8 #4 「degraded 표시」 실장 승인 — `C:\lab\2nd_NGV\docs\plans\2026-10-26-pr-autofix-loop-2차.md`).
