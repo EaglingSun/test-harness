@@ -32,7 +32,7 @@
       "status": "completed",
       "started_at": "2026-10-25T22:56:18+0900",
       "summary": "loop/review.py --mode real(sys.executable -m pr_reviewer <repo> <pr> --junit-dir out --plan-out out/review-plan.json --current-user 기본 github-actions[bot]) → plan 변환(counts 원천등급·counts_basis agent_raw·critical_by_category·event·errors·posted), 프로세스 실패/plan 없음/깨진 JSON → status error·posted false·exit 0 + fixture review-plan.json + tests/test_loop_review.py 9건; pytest 336 passed, run_local exit 0, scope OK; red-green: 실패 시 status ok 고정 → 4 fail, 되돌림 후 green; step3.md 허용 범위를 tests/fixtures/loop/* 로 고침(P12)",
-      "completed_at": "2026-10-25T22:58:18+0900"
+      "completed_at": "2026-10-25T22:58:35+0900"
     }
   ],
   "created_at": "2026-10-25T22:45:28+0900"
