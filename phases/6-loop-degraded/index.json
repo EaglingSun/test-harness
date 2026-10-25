@@ -7,7 +7,8 @@
       "name": "review-partial-degraded",
       "status": "completed",
       "started_at": "2026-10-26T00:29:00+0900",
-      "summary": "decide_merge: review status ok + errors≥1 → degraded True + reason「리뷰 부분 실패 N건」(PARTIAL_NOTE 상수, 판정 불변) · 테스트 2건(부분실패 PASS/BLOCK, 전원성공 non-degraded) · RED 1 fail → GREEN 31 pass → errors 검사 무력화 시 1 fail 확인 후 복원 · 전체 427 pass · Scope OK"
+      "summary": "decide_merge: review status ok + errors≥1 → degraded True + reason「리뷰 부분 실패 N건」(PARTIAL_NOTE 상수, 판정 불변) · 테스트 2건(부분실패 PASS/BLOCK, 전원성공 non-degraded) · RED 1 fail → GREEN 31 pass → errors 검사 무력화 시 1 fail 확인 후 복원 · 전체 427 pass · Scope OK",
+      "completed_at": "2026-10-26T00:30:08+0900"
     }
   ],
   "created_at": "2026-10-26T00:29:00+0900"
