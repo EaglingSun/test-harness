@@ -12,3 +12,4 @@
 - [ ] P5 | 0-mvp/design | 커버리지 리포트(Cobertura 등) 연계로 미커버 변경 라인 지적 | 구조 기반 테스트 관점 강화
 - [ ] P6 | 0-mvp/design | 재리뷰 시 기존 봇 코멘트 갱신/정리 | 중복 코멘트 방지
 - [ ] P7 | 0-mvp/design | 대형 diff 분할 리뷰, 모델 선택 옵션 | 큰 PR 대응과 비용 조절
+- [ ] P8 | 0-mvp/step6 | JUnit run 조회(`gh run list`)·요약 코멘트 게시의 GhError도 CLI에서 잡아 stderr 메시지+exit 1로 처리 | 현재는 traceback으로 종료
