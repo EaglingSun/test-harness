@@ -131,7 +131,7 @@ R7
 - `tests/test_loop_test_report.py`
 - `tests/test_loop_stages.py`
 - `tests/test_loop_run_local.py`
-- `tests/fixtures/loop/`
+- `tests/fixtures/loop/*`
 
 ## Acceptance Criteria
 

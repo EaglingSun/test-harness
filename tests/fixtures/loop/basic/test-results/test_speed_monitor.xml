@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="test_speed_monitor" tests="11" failures="3" errors="0">
+    <testcase classname="test_speed_monitor" name="SEC3_speed_0_is_none">
+      <failure message="tests/test_speed_monitor.c:13: VSM_WARN_NONE == sm_evaluate(0u, false) (expected 0, actual 1)">tests/test_speed_monitor.c:13: VSM_WARN_NONE == sm_evaluate(0u, false) (expected 0, actual 1) (failed checks: 1)</failure>
+    </testcase>
+    <testcase classname="test_speed_monitor" name="SEC3_speed_1_is_low"/>
+    <testcase classname="test_speed_monitor" name="SEC3_speed_150_is_low"/>
+    <testcase classname="test_speed_monitor" name="SR-003_speed_151_is_mid"/>
+    <testcase classname="test_speed_monitor" name="SR-003_speed_199_is_mid"/>
+    <testcase classname="test_speed_monitor" name="SR-002_speed_200_is_high">
+      <failure message="tests/test_speed_monitor.c:43: VSM_WARN_HIGH == sm_evaluate(200u, false) (expected 3, actual 2)">tests/test_speed_monitor.c:43: VSM_WARN_HIGH == sm_evaluate(200u, false) (expected 3, actual 2) (failed checks: 1)</failure>
+    </testcase>
+    <testcase classname="test_speed_monitor" name="SR-002_speed_201_is_high"/>
+    <testcase classname="test_speed_monitor" name="SR-002_speed_65535_is_high"/>
+    <testcase classname="test_speed_monitor" name="SR-010_count_per_high"/>
+    <testcase classname="test_speed_monitor" name="SR-010_count_follows_high_with_brake">
+      <failure message="tests/test_speed_monitor.c:75: (w == VSM_WARN_HIGH ? 1 : 0) == sm_over_count() (expected 1, actual 0)">tests/test_speed_monitor.c:75: (w == VSM_WARN_HIGH ? 1 : 0) == sm_over_count() (expected 1, actual 0) (failed checks: 1)</failure>
+    </testcase>
+    <testcase classname="test_speed_monitor" name="SR-005_reset_clears_counter"/>
+  </testsuite>
+</testsuites>

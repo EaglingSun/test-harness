@@ -16,3 +16,4 @@
 - [ ] P9 | 0-mvp/review | git이 따옴표로 감싼 비ASCII 파일 경로(`+++ "b/\355..."`)를 diff.py에서 해석해 인라인 대상에 포함 | 현재는 해당 파일 지적이 모두 요약 전용으로 강등됨
 - [ ] P10 | 0-mvp/E2E | 스모크 절차 문서화(`docs/SMOKE.md`)와 S1~S5 기대 결과 자동 대조 스크립트 | 실습에서 리뷰어 수정 후 반복 검증
 - [ ] P11 | 0-mvp/E2E | 구조 기반 테스트: 실패를 base 브랜치 최신 run 결과와 비교해 "기존 실패/신규 실패"를 결정적으로 구분 | 현재는 LLM이 원인 위치로 판단, base에서도 실패하면 이 PR 무관이 확정됨
+- [ ] P12 | 1-loop-nogate/step0 | scope_check.py가 `/`로 끝나는 허용 패턴(`tests/fixtures/loop/`)을 디렉터리 접두사로 해석 | 현재 fnmatch 완전 일치라 하위 파일이 모두 위반으로 잡혀 step0.md를 `tests/fixtures/loop/*`로 고쳤다(step3.md도 같은 패턴)
