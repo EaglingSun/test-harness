@@ -56,7 +56,7 @@
       "status": "completed",
       "started_at": "2026-10-25T16:19:50+0900",
       "summary": "__main__.py main(argv, runner): argparse(owner/repo 검증·number int·--dry-run·--junit-artifact 기본 junit-results), PR/diff/user 조회 GhError→stderr+exit 1, TemporaryDirectory JUnit 다운로드·JUnitParseError→경고 후 report=None, run_all_agents→build_review_plan, dry-run payload JSON(ensure_ascii=False) 출력, post_review→post_issue_comment 순서·리뷰 실패 시 요약에 실패 문구 붙여 게시 후 exit 1 + tests/test_cli.py 14건(단일 fake runner)",
-      "completed_at": "2026-10-25T16:21:40+0900"
+      "completed_at": "2026-10-25T16:21:53+0900"
     }
   ],
   "created_at": "2026-10-25T16:09:12+0900"
