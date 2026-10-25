@@ -27,6 +27,8 @@ GitHub PR 한 건에 대해 관점이 다른 리뷰 에이전트 3개를 병렬�
 | R9 | `pr_reviewer` CLI 옵션 `--junit-dir PATH`(로컬 JUnit) · `--plan-out PATH`(payload JSON 저장) · `--current-user LOGIN`(`gh api user` 생략) | `pytest -q tests/test_cli.py` |
 | R10 | 루프 review 단계 real 모드: `pr_reviewer`를 R9 옵션으로 실행하고 결과를 review 계약 JSON으로 변환 | `pytest -q tests/test_loop_review.py` |
 | R11 | 게이트 강제 스위치(멈추는 장치): 실행 시점 PR 라벨 `force-block-<게이트>`가 있으면 그 게이트가 BLOCK. 라벨 조회 실패는 fail-closed. workflow는 `labeled`(force-block-* 만)로 다시 돈다 | `pytest -q tests/test_loop_gate_switch.py tests/test_loop_workflow.py` |
+| R12 | 게이트 1차 임시 기준(ADR-007 표): autofix = unexpected 건수로 AUTO_FIX/NO_ACTION/NEEDS_HUMAN/NEEDS_INVESTIGATION, merge = reverify ⓐⓒ·목록 미갱신 ⓑ·판정 불가면 BLOCK, release = merge 됨 + reverify 통과. 리뷰 실패는 PASS + degraded | `pytest -q tests/test_loop_gate_criteria.py` |
+| R13 | Fix real 모드(선택): `claude -p` 가 `src/`·`include/` 만 고치고, 바뀐 경로를 코드로 검사한 뒤 commit/push. 기본은 stub | `pytest -q tests/test_loop_fix_real.py` |
 
 ## MVP 제외 사항
 - GitHub Actions/Webhook 자동 트리거 — 필요하면 PROPOSALS.md로 (2026-10-25: self-hosted PR 루프 R7~R10으로 일부 편입)

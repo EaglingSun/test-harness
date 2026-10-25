@@ -33,6 +33,7 @@ tests/
 ├── test_agents.py
 ├── test_aggregate.py
 ├── test_cli.py
+├── test_proc.py        # run_process 인자 전달(cwd 등)
 ├── test_loop_*.py      # loop/ 단계별 테스트 · test_loop_workflow.py(yaml 구조)
 └── fixtures/loop/      # run_local · 단계 테스트용 JUnit XML · 이벤트 · 기준 목록
 scripts/                # 하네스 스크립트 (수정하지 않음)

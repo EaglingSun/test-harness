@@ -1,0 +1,8 @@
+{
+  "project": "pr-reviewer",
+  "phase": "3-loop-criteria",
+  "steps": [
+    { "step": 0, "name": "gate-criteria", "status": "pending" },
+    { "step": 1, "name": "fix-real-mode", "status": "pending" }
+  ]
+}
