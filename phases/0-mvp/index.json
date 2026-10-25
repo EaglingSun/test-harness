@@ -37,7 +37,10 @@
     {
       "step": 4,
       "name": "review-agents",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-10-25T16:16:22+0900",
+      "summary": "agents.py FINDINGS_SCHEMA, review_structural_tests(report None/실패 0건 skip·claude 미호출, 실패 목록+diff stdin), review_security(보안 관점·ADR-005 등급/근거 규칙), review_code(/code-review low <url> 1단계 allowedTools gh pr diff/view만 → 2단계 JSON 변환·보안 제외), _to_findings(다른 category·필수 필드 누락·타입 오류 item 버림), run_all_agents(run_parallel) + tests/test_agents.py 12건(fake runner)",
+      "completed_at": "2026-10-25T16:17:43+0900"
     },
     {
       "step": 5,
