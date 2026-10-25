@@ -13,3 +13,4 @@
 - [ ] P6 | 0-mvp/design | 재리뷰 시 기존 봇 코멘트 갱신/정리 | 중복 코멘트 방지
 - [ ] P7 | 0-mvp/design | 대형 diff 분할 리뷰, 모델 선택 옵션 | 큰 PR 대응과 비용 조절
 - [ ] P8 | 0-mvp/step6 | JUnit run 조회(`gh run list`)·요약 코멘트 게시의 GhError도 CLI에서 잡아 stderr 메시지+exit 1로 처리 | 현재는 traceback으로 종료
+- [ ] P9 | 0-mvp/review | git이 따옴표로 감싼 비ASCII 파일 경로(`+++ "b/\355..."`)를 diff.py에서 해석해 인라인 대상에 포함 | 현재는 해당 파일 지적이 모두 요약 전용으로 강등됨
