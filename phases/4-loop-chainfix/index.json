@@ -1,0 +1,7 @@
+{
+  "project": "pr-reviewer",
+  "phase": "4-loop-chainfix",
+  "steps": [
+    { "step": 0, "name": "skip-chain-fix", "status": "pending" }
+  ]
+}
