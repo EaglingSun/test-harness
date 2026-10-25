@@ -24,7 +24,7 @@
       "status": "completed",
       "started_at": "2026-10-25T22:54:00+0900",
       "summary": "pr_reviewer CLI --junit-dir(로컬 *.xml, 0개 경고·--junit-artifact보다 우선)·--plan-out(게시 전 UTF-8 JSON 저장)·--current-user(gh api user 생략) + tests/test_cli.py 9건 추가; pytest 327 passed, scope OK; red-green: --current-user 무시하고 current_user(runner) 호출 → 2 fail, 되돌림 후 green",
-      "completed_at": "2026-10-25T22:55:59+0900"
+      "completed_at": "2026-10-25T22:56:13+0900"
     },
     {
       "step": 3,
