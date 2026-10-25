@@ -120,3 +120,25 @@ def test_nested_ignores_changes_outside_project(tmp_path):
     _make_repo(tmp_path, project)
     (tmp_path / "outside.txt").write_text("b\n", encoding="utf-8")
     assert _run(project) == 0
+
+
+def test_violation_output_on_cp949_console(tmp_path):
+    """
+    대상: main() — 콘솔 인코딩이 cp949(한국어 Windows 기본)일 때 범위 이탈 출력
+    구분: 예외
+    오라클: (종료코드) 1 + stdout이 UTF-8로 위반 메시지와 파일명을 담는다.
+            이전에는 '—'(U+2014)를 cp949로 인코딩하지 못해 UnicodeEncodeError traceback이 났다.
+    """
+    import io
+
+    _make_repo(tmp_path, tmp_path)
+    (tmp_path / "outside.txt").write_text("x\n", encoding="utf-8")
+    raw = io.BytesIO()
+    cp949_stdout = io.TextIOWrapper(raw, encoding="cp949")
+    with patch("sys.stdout", cp949_stdout):
+        code = _run(tmp_path)
+        cp949_stdout.flush()
+    out = raw.getvalue().decode("utf-8")
+    assert code == 1
+    assert "SCOPE VIOLATION — 허용 범위 밖 파일이 변경되었습니다:" in out
+    assert "outside.txt" in out

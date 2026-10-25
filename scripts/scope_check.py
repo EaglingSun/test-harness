@@ -62,6 +62,9 @@ def changed_files(base: str) -> list[str]:
 
 def main():
     """CLI 진입점: 허용 패턴과 변경 파일을 대조해 위반 목록을 출력한다."""
+    # 한국어 Windows 콘솔(cp949)은 '—' 등을 인코딩하지 못해 traceback이 나므로 UTF-8로 출력한다.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     p = argparse.ArgumentParser()
     p.add_argument("step_file")
     p.add_argument("--base", default="HEAD")
