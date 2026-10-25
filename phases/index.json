@@ -12,7 +12,8 @@
     },
     {
       "dir": "2-loop-stop",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-10-25T23:14:22+0900"
     }
   ]
 }
