@@ -1,14 +1,17 @@
-# 프로젝트: {프로젝트명}
+# 프로젝트: pr-reviewer
 
 > 공통 응답 스타일과 MVP-First Guard 원칙은 글로벌 CLAUDE.md를 따른다.
 > 이 파일에는 프로젝트 고유 규칙과, 팀원도 지켜야 하는 Scope Lock만 둔다.
 
 ## 기술 스택
-- {언어/프레임워크 (예: Python 3.12 + pytest + Playwright)}
+- Python 3.13 표준 라이브러리 + pytest. 외부 CLI: `gh`, `claude` (ADR-001~003)
 
 ## 아키텍처 규칙
-- CRITICAL: {절대 규칙 1}
-- {일반 규칙}
+- CRITICAL: 테스트에서 실제 `gh`/`claude` 프로세스를 실행하지 마라. 외부 호출은 runner 주입으로 fake 처리한다 (ADR-004). 이유: 실제 GitHub 게시와 과금 호출 방지.
+- CRITICAL: step 세션에서 실제 PR에 게시하거나 `py -m pr_reviewer`를 `--dry-run` 없이 실행하지 마라. 실제 게시는 phase 완료 후 Human 확인을 받고 수동 E2E로만 한다.
+- CRITICAL: 인라인 코멘트는 diff의 commentable line(RIGHT side)에만 단다. 이유: 범위 밖 line이 하나라도 있으면 GitHub가 리뷰 전체를 422로 거부한다.
+- 외부 프로세스는 `shell=False` 인자 리스트로 실행한다.
+- 모듈 경계는 `pr_reviewer/models.py` dataclass로만 주고받는다.
 
 ## Scope Lock (MVP-First Guard 적용)
 - CRITICAL: 구현 범위는 `docs/PRD.md`의 "MVP 범위"와 현재 step 파일의 "변경 허용 범위"로 한정한다.
@@ -26,8 +29,8 @@
 
 ## 명령어
 ```bash
-{test 명령}   # 예: pytest -q
-{lint 명령}   # 예: ruff check .
+py -m pytest -q                                   # 전체 테스트 (Stop hook VERIFY와 동일)
+py -m pr_reviewer <owner/repo> <PR번호> --dry-run   # 게시 없이 payload 확인
 ```
 
 ## 하네스 현황

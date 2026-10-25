@@ -1,0 +1,13 @@
+{
+  "project": "pr-reviewer",
+  "phase": "0-mvp",
+  "steps": [
+    { "step": 0, "name": "diff-parser", "status": "pending" },
+    { "step": 1, "name": "github-client", "status": "pending" },
+    { "step": 2, "name": "junit-report", "status": "pending" },
+    { "step": 3, "name": "agent-runner", "status": "pending" },
+    { "step": 4, "name": "review-agents", "status": "pending" },
+    { "step": 5, "name": "aggregator", "status": "pending" },
+    { "step": 6, "name": "cli-wiring", "status": "pending" }
+  ]
+}
