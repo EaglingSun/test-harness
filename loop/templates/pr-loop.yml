@@ -195,8 +195,10 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+  # fix 가 skip 되면 조상에 skip 이 생겨 기본 조건 success() 가 거짓 — 명시적 if 필요
   merge-gate:
     needs: [reverify]
+    if: ${{ !cancelled() && needs.reverify.result == 'success' }}
     runs-on: [self-hosted, vsm-loop]
     timeout-minutes: 30
     steps:
@@ -223,8 +225,10 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+  # fix 가 skip 되면 조상에 skip 이 생겨 기본 조건 success() 가 거짓 — 명시적 if 필요
   merge:
     needs: [merge-gate]
+    if: ${{ !cancelled() && needs.merge-gate.result == 'success' }}
     runs-on: [self-hosted, vsm-loop]
     timeout-minutes: 30
     steps:
@@ -250,8 +254,10 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+  # fix 가 skip 되면 조상에 skip 이 생겨 기본 조건 success() 가 거짓 — 명시적 if 필요
   release-gate:
     needs: [merge]
+    if: ${{ !cancelled() && needs.merge.result == 'success' }}
     runs-on: [self-hosted, vsm-loop]
     timeout-minutes: 30
     steps:
@@ -278,8 +284,10 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+  # fix 가 skip 되면 조상에 skip 이 생겨 기본 조건 success() 가 거짓 — 명시적 if 필요
   release:
     needs: [release-gate]
+    if: ${{ !cancelled() && needs.release-gate.result == 'success' }}
     runs-on: [self-hosted, vsm-loop]
     timeout-minutes: 30
     steps:
