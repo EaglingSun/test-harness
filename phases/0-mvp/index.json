@@ -7,7 +7,8 @@
       "name": "diff-parser",
       "status": "completed",
       "started_at": "2026-10-25T16:09:12+0900",
-      "summary": "pyproject(pythonpath), models.py 계약 dataclass, proc.py Runner/run_process, diff.py parse_commentable_lines(RIGHT side, rename/삭제/binary/CRLF/,d 생략 처리) + tests/test_diff.py 12건"
+      "summary": "pyproject(pythonpath), models.py 계약 dataclass, proc.py Runner/run_process, diff.py parse_commentable_lines(RIGHT side, rename/삭제/binary/CRLF/,d 생략 처리) + tests/test_diff.py 12건",
+      "completed_at": "2026-10-25T16:10:49+0900"
     },
     {
       "step": 1,
