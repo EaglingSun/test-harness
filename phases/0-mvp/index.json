@@ -32,7 +32,7 @@
       "status": "completed",
       "started_at": "2026-10-25T16:15:15+0900",
       "summary": "runner.py run_claude(claude -p --output-format json, prompt stdin·args_prompt 인자, --json-schema/--allowedTools/--disallowedTools, returncode≠0·깨진 JSON·is_error·subtype≠success·permission_denials·structured_output 비dict·TimeoutExpired→ClaudeError, schema 유무로 structured_output/result 반환), run_parallel(ThreadPoolExecutor max_workers=len, 키 순서 보존, 예외→AgentResult(error)) + tests/test_runner.py 16건(fake runner, Barrier 동시성 검증)",
-      "completed_at": "2026-10-25T16:16:10+0900"
+      "completed_at": "2026-10-25T16:16:22+0900"
     },
     {
       "step": 4,
