@@ -1,0 +1,303 @@
+# PR 루프 (ADR-006) — 강사 키트 workflow 틀. 1차: 무게이트(게이트는 항상 통과).
+# 한 workflow 안 job 체인: test → review → autofix-gate → fix → reverify → merge-gate → merge → release-gate → release
+#
+# 설치
+#   1. 이 파일을 vsm 저장소의 .github/workflows/pr-loop.yml 로 복사한다.
+#   2. 저장소 변수(Settings → Secrets and variables → Actions → Variables)
+#      - LOOP_HOME        : runner PC 의 test_harness 로컬 경로 (예: C:\lab\2nd_NGV\test-harness). 단계 스크립트를 여기서 부른다.
+#      - LOOP_REVIEW_MODE : review 단계 모드. 비우면 stub.
+#   3. self-hosted runner 를 라벨 vsm-loop 로 등록한다. runner PC 에 py · gh · claude · gcc(setup\setup_gcc.ps1) 가 있어야 한다.
+#
+# 단계 간 데이터는 <workspace>/out/<단계>.json (loop/contract.py) 이고, job 사이는 artifact loop-<단계> 로 옮긴다.
+# 토큰은 GITHUB_TOKEN 만 쓴다 — PAT 로 push 하면 새 run 이 돌아 Fix 가 반복될 수 있다.
+# action 은 GitHub 공식 것만, 커밋 SHA 로 고정한다. 구조 검사: tests/test_loop_workflow.py
+name: pr-loop
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]   # 다음 phase 에서 labeled 를 추가할 자리
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: pr-loop-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  PYTHONUTF8: "1"
+
+# 모든 job 의 첫 step 은 checkout — self-hosted 작업 폴더가 job 사이에 남으므로 clean 으로 이전 run 의 out/ 을 지우고,
+# fetch-depth 0 으로 origin/<base> 이력을 받는다.
+jobs:
+  test:
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      # gcc 는 runner PC 에 이미 있다 — 스크립트가 .setup-ok 를 보고 건너뛴다
+      - name: gcc 확인
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File setup\setup_gcc.ps1
+
+      # 판정은 게이트 몫 — 테스트가 실패해도 다음 step 으로 간다
+      - name: C 테스트
+        id: make
+        continue-on-error: true
+        shell: cmd
+        run: .\make.cmd test
+
+      - name: 테스트 분류
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.test_report --workspace "${{ github.workspace }}" --stage test --make-outcome ${{ steps.make.outcome }} --base-ref origin/${{ github.base_ref }}
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-test
+          path: out/test.json
+          overwrite: true
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-junit
+          path: test-results/*.xml
+          overwrite: true
+          if-no-files-found: error
+
+  review:
+    needs: [test]
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: loop-*
+          merge-multiple: true
+          path: out
+
+      - name: 리뷰
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.review --workspace "${{ github.workspace }}" --mode ${{ vars.LOOP_REVIEW_MODE || 'stub' }} --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-review
+          path: out/review.json
+          overwrite: true
+          if-no-files-found: error
+
+  autofix-gate:
+    needs: [test, review]
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    outputs:
+      go: ${{ steps.gate.outputs.go }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: loop-*
+          merge-multiple: true
+          path: out
+
+      # go=false 면 fix 를 건너뛴다(job 은 초록). 1차는 항상 go=true
+      - name: autofix 게이트
+        id: gate
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate autofix
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-gate-autofix
+          path: out/gate-autofix.json
+          overwrite: true
+          if-no-files-found: error
+
+  fix:
+    needs: [autofix-gate]
+    if: ${{ needs.autofix-gate.outputs.go == 'true' }}
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: loop-*
+          merge-multiple: true
+          path: out
+
+      # GITHUB_TOKEN 으로 push 한다 — 이 push 는 새 run 을 만들지 않는다
+      - name: 수정
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.fix --workspace "${{ github.workspace }}" --pr ${{ github.event.pull_request.number }} --head-ref ${{ github.head_ref }} --base-ref origin/${{ github.base_ref }} --mode stub
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-fix
+          path: out/fix.json
+          overwrite: true
+          if-no-files-found: error
+
+  # fix 를 건너뛰어도(go=false) 재검증은 돈다
+  reverify:
+    needs: [autofix-gate, fix]
+    if: ${{ !cancelled() && needs.autofix-gate.result == 'success' && (needs.fix.result == 'success' || needs.fix.result == 'skipped') }}
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      # head_ref 를 다시 받으므로 fix 가 push 한 커밋까지 들어온다
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: gcc 확인
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File setup\setup_gcc.ps1
+
+      - name: C 테스트
+        id: make
+        continue-on-error: true
+        shell: cmd
+        run: .\make.cmd test
+
+      - name: 테스트 분류
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.test_report --workspace "${{ github.workspace }}" --stage reverify --make-outcome ${{ steps.make.outcome }} --base-ref origin/${{ github.base_ref }}
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-reverify
+          path: out/reverify.json
+          overwrite: true
+          if-no-files-found: error
+
+  merge-gate:
+    needs: [reverify]
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: loop-*
+          merge-multiple: true
+          path: out
+
+      # BLOCK 이면 exit 1 → merge job skip (빨간 체크)
+      - name: merge 게이트
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate merge
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-gate-merge
+          path: out/gate-merge.json
+          overwrite: true
+          if-no-files-found: error
+
+  merge:
+    needs: [merge-gate]
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: loop-*
+          merge-multiple: true
+          path: out
+
+      - name: 머지
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.finish merge --workspace "${{ github.workspace }}" --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-merge
+          path: out/merge.json
+          overwrite: true
+          if-no-files-found: error
+
+  release-gate:
+    needs: [merge]
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: loop-*
+          merge-multiple: true
+          path: out
+
+      # BLOCK 이면 exit 1 → release job skip (빨간 체크)
+      - name: release 게이트
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate release
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-gate-release
+          path: out/gate-release.json
+          overwrite: true
+          if-no-files-found: error
+
+  release:
+    needs: [release-gate]
+    runs-on: [self-hosted, vsm-loop]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: loop-*
+          merge-multiple: true
+          path: out
+
+      # 실습용 prerelease 만 만든다(멱등 — 태그가 있으면 재사용)
+      - name: 릴리스
+        working-directory: ${{ vars.LOOP_HOME }}
+        run: py -m loop.finish release --workspace "${{ github.workspace }}" --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: loop-release
+          path: out/release.json
+          overwrite: true
+          if-no-files-found: error
