@@ -7,7 +7,8 @@
       "name": "loop-skeleton",
       "status": "completed",
       "started_at": "2026-10-25T22:45:28+0900",
-      "summary": "loop/ 뼈대(contract·test_report·review stub·gate 무게이트·fix stub·finish·run_local) + basic fixture + 테스트 38건; pytest 286 passed, run_local exit 0, scope OK; red-green: fix 범위를 HEAD 전체로 → 2 fail, contract 필수키 검사 off → 2 fail, 되돌림 후 green; scope_check가 디렉터리 패턴을 못 맞춰 step0.md 허용 범위를 tests/fixtures/loop/* 로 고침(P12)"
+      "summary": "loop/ 뼈대(contract·test_report·review stub·gate 무게이트·fix stub·finish·run_local) + basic fixture + 테스트 38건; pytest 286 passed, run_local exit 0, scope OK; red-green: fix 범위를 HEAD 전체로 → 2 fail, contract 필수키 검사 off → 2 fail, 되돌림 후 green; scope_check가 디렉터리 패턴을 못 맞춰 step0.md 허용 범위를 tests/fixtures/loop/* 로 고침(P12)",
+      "completed_at": "2026-10-25T22:51:07+0900"
     },
     {
       "step": 1,
