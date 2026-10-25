@@ -16,6 +16,7 @@ UPSTREAM: dict[str, tuple[str, ...]] = {
 }
 AUTOFIX_MAX = 3  # unexpected 이 이 건수 이하면 AUTO_FIX (1차 임시 기준)
 DEGRADED_NOTE = "리뷰 실패 — 리뷰 없이 판정"
+PARTIAL_NOTE = "리뷰 부분 실패 {n}건"  # status ok + errors 1건 이상 (R14) — 표시만, 판정은 그대로
 
 
 def decide_autofix(test: dict) -> tuple[bool, str, str]:
@@ -53,6 +54,9 @@ def decide_merge(reverify: dict, review: dict) -> tuple[bool, str, str, bool]:
     degraded = review["status"] == "error"
     if degraded:
         reason += f" · {DEGRADED_NOTE}"
+    elif review["errors"]:
+        degraded = True
+        reason += f" · {PARTIAL_NOTE.format(n=len(review['errors']))}"
     return go, "PASS" if go else "BLOCK", reason, degraded
 
 

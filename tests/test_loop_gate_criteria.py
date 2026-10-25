@@ -19,10 +19,10 @@ def report(stage: str = "reverify", status: str = "ok", unexpected=(), fixed=(),
             "expected_base": [], "expected_head": list(expected_head)}
 
 
-def review(status: str = "ok", critical: int = 0) -> dict:
+def review(status: str = "ok", critical: int = 0, errors=()) -> dict:
     return {"stage": "review", "status": status, "mode": "stub",
             "counts": {"critical": critical, "major": 0, "minor": 0}, "critical_by_category": {},
-            "event": "COMMENT", "posted": False, "errors": []}
+            "event": "COMMENT", "posted": False, "errors": list(errors)}
 
 
 def merged(flag: bool = True) -> dict:
@@ -94,6 +94,22 @@ def test_merge_review_error_is_degraded_but_keeps_decision():
     assert reason.endswith("리뷰 실패 — 리뷰 없이 판정")
     go, decision, reason, degraded = gate.decide_merge(report(unexpected=[A]), review(status="error"))
     assert (go, decision, degraded) == (False, "BLOCK", True)
+
+
+def test_merge_review_partial_failure_is_degraded_but_keeps_decision():
+    partial = review(errors=["agent security: permission denied: Bash"])
+    go, decision, reason, degraded = gate.decide_merge(report(), partial)
+    assert (go, decision, degraded) == (True, "PASS", True)
+    assert reason.endswith("리뷰 부분 실패 1건")
+    go, decision, reason, degraded = gate.decide_merge(report(unexpected=[A]), partial)
+    assert (go, decision, degraded) == (False, "BLOCK", True)
+    assert "리뷰 부분 실패 1건" in reason
+
+
+def test_merge_review_all_ok_not_degraded():
+    go, decision, reason, degraded = gate.decide_merge(report(), review(errors=[]))
+    assert (go, decision, degraded) == (True, "PASS", False)
+    assert "부분 실패" not in reason
 
 
 def test_merge_review_critical_does_not_block():
