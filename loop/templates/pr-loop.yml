@@ -7,6 +7,7 @@
 #      - LOOP_HOME        : runner PC 의 test_harness 로컬 경로 (예: C:\lab\2nd_NGV\test-harness). 단계 스크립트를 여기서 부른다.
 #      - LOOP_REVIEW_MODE : review 단계 모드. 비우면 stub.
 #   3. self-hosted runner 를 라벨 vsm-loop 로 등록한다. runner PC 에 py · gh · claude · gcc(setup\setup_gcc.ps1) 가 있어야 한다.
+#   4. 게이트 강제 스위치 라벨 3개 생성: gh label create force-block-autofix · force-block-merge · force-block-release
 #
 # 단계 간 데이터는 <workspace>/out/<단계>.json (loop/contract.py) 이고, job 사이는 artifact loop-<단계> 로 옮긴다.
 # 토큰은 GITHUB_TOKEN 만 쓴다 — PAT 로 push 하면 새 run 이 돌아 Fix 가 반복될 수 있다.
@@ -16,14 +17,15 @@ name: pr-loop
 on:
   pull_request:
     branches: [master]
-    types: [opened, synchronize, reopened]   # 다음 phase 에서 labeled 를 추가할 자리
+    types: [opened, synchronize, reopened, labeled]   # labeled: force-block-<게이트> 라벨을 붙이면 루프를 다시 돌려 그 게이트에서 막는다
 
 permissions:
   contents: write
   pull-requests: write
 
 concurrency:
-  group: pr-loop-${{ github.event.pull_request.number }}
+  # concurrency 는 pending run 을 1건만 남긴다 — force-block- 이 아닌 라벨 run 은 따로 두어 진짜 pending run 을 밀어내지 않게 한다
+  group: pr-loop-${{ github.event.pull_request.number }}${{ (github.event.action == 'labeled' && !startsWith(github.event.label.name, 'force-block-')) && format('-skip-{0}', github.run_id) || '' }}
   cancel-in-progress: false
 
 env:
@@ -34,6 +36,8 @@ env:
 # fetch-depth 0 으로 origin/<base> 이력을 받는다.
 jobs:
   test:
+    # force-block- 이 아닌 라벨은 루프를 돌리지 않는다(뒤 job 은 needs 로 연쇄 skip)
+    if: ${{ github.event.action != 'labeled' || startsWith(github.event.label.name, 'force-block-') }}
     runs-on: [self-hosted, vsm-loop]
     timeout-minutes: 30
     steps:
@@ -120,7 +124,7 @@ jobs:
       - name: autofix 게이트
         id: gate
         working-directory: ${{ vars.LOOP_HOME }}
-        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate autofix
+        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate autofix --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
@@ -210,7 +214,7 @@ jobs:
       # BLOCK 이면 exit 1 → merge job skip (빨간 체크)
       - name: merge 게이트
         working-directory: ${{ vars.LOOP_HOME }}
-        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate merge
+        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate merge --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
@@ -265,7 +269,7 @@ jobs:
       # BLOCK 이면 exit 1 → release job skip (빨간 체크)
       - name: release 게이트
         working-directory: ${{ vars.LOOP_HOME }}
-        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate release
+        run: py -m loop.gate --workspace "${{ github.workspace }}" --gate release --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:

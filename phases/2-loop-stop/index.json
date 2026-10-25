@@ -13,7 +13,10 @@
     {
       "step": 1,
       "name": "workflow-labels",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-10-25T23:12:34+0900",
+      "summary": "pr-loop.yml: types 에 labeled 추가 · test job if(force-block- 라벨만) · concurrency group 에 비-force-block 라벨 run 은 -skip-<run_id> 분리 · 게이트 3개에 --repo/--pr 전달 · 머리 주석에 라벨 3개 gh label create 절차; test_loop_workflow.py: types 기대값을 labeled 포함으로 변경(의도된 변경) + test.if·concurrency·게이트 인자·머리 주석 검사 추가; 전체 370 passed; red-green-revert: test.if 삭제 1 failed, merge 게이트 --pr 삭제 1 failed, 복원 후 통과",
+      "completed_at": "2026-10-25T23:14:07+0900"
     }
   ],
   "created_at": "2026-10-25T23:10:24+0900"

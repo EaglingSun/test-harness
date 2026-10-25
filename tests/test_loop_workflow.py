@@ -81,7 +81,13 @@ def test_triggers_pull_request_master(wf):
     on = wf.get("on", wf.get(True))  # PyYAML 은 키 on 을 불리언 True 로 읽는다
     assert list(on) == ["pull_request"]
     assert on["pull_request"]["branches"] == ["master"]
-    assert on["pull_request"]["types"] == ["opened", "synchronize", "reopened"]
+    assert on["pull_request"]["types"] == ["opened", "synchronize", "reopened", "labeled"]
+
+
+def test_labeled_runs_only_for_force_block(jobs):
+    cond = jobs["test"]["if"]
+    assert "github.event.action != 'labeled'" in cond
+    assert "startsWith(github.event.label.name, 'force-block-')" in cond
 
 
 def test_no_secrets_or_dispatch(text):
@@ -99,6 +105,12 @@ def test_permissions_and_token(wf, jobs):
 def test_concurrency_per_pr_no_cancel(wf):
     assert "github.event.pull_request.number" in wf["concurrency"]["group"]
     assert wf["concurrency"]["cancel-in-progress"] is False
+
+
+def test_concurrency_separates_non_force_block_labels(wf):
+    group = wf["concurrency"]["group"]
+    assert "github.run_id" in group  # 아무 라벨 run 이 진짜 pending run 을 밀어내지 않게
+    assert "force-block-" in group
 
 
 def test_job_chain_matches(jobs):
@@ -176,6 +188,22 @@ def test_stage_uploads_named_artifact(jobs, name):
 def test_test_job_uploads_junit(jobs):
     names = [s["with"]["name"] for s in jobs["test"]["steps"] if s.get("uses") == UPLOAD]
     assert "loop-junit" in names
+
+
+@pytest.mark.parametrize("name", ["autofix-gate", "merge-gate", "release-gate"])
+def test_gate_step_passes_repo_and_pr(jobs, name):
+    gate = [s for s in jobs[name]["steps"] if "py -m loop.gate" in s.get("run", "")]
+    assert len(gate) == 1
+    run = gate[0]["run"]
+    assert "--repo ${{ github.repository }}" in run
+    assert "--pr ${{ github.event.pull_request.number }}" in run
+
+
+def test_header_lists_force_block_labels(text):
+    header = text.split("\nname:", 1)[0]
+    assert "gh label create" in header
+    for label in ("force-block-autofix", "force-block-merge", "force-block-release"):
+        assert label in header
 
 
 def test_loop_modules_exist(text):
