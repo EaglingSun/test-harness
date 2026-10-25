@@ -32,7 +32,8 @@
     },
     {
       "dir": "6-loop-degraded",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-10-26T00:30:09+0900"
     }
   ]
 }
