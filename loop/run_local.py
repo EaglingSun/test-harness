@@ -72,16 +72,21 @@ class FakeRunner:
 
 
 def prepare_workspace(fixture: Path, ws: Path) -> None:
-    (ws / "test-results").mkdir(parents=True, exist_ok=True)
-    for xml in sorted((fixture / "test-results").glob("*.xml")):
-        shutil.copy2(xml, ws / "test-results" / xml.name)
+    """fixture 의 `test-results/`(있으면 `reverify-results/` 도) XML 과 head 기준 목록을 workspace 에 둔다."""
+    for sub in ("test-results", "reverify-results"):
+        if sub == "test-results" or (fixture / sub).is_dir():
+            (ws / sub).mkdir(parents=True, exist_ok=True)
+        for xml in sorted((fixture / sub).glob("*.xml")):
+            shutil.copy2(xml, ws / sub / xml.name)
     (ws / "tests").mkdir(parents=True, exist_ok=True)
     shutil.copy2(fixture / "tests" / "expected_failures.txt", ws / "tests" / "expected_failures.txt")
 
 
-def stages(ws: str) -> list[tuple[str, Callable[..., int], list[str]]]:
+def stages(ws: str, reverify_results: str | None = None) -> list[tuple[str, Callable[..., int], list[str]]]:
+    """reverify_results 가 있으면 reverify 단계는 그 폴더 XML 을 쓴다(없으면 test-results 재사용)."""
     common = ["--workspace", ws]
     pr = ["--repo", REPO, "--pr", str(PR)]
+    rv_results = ["--results", reverify_results] if reverify_results else []
     return [
         ("test", test_report.main, [*common, "--stage", "test", "--make-outcome", "failure", "--base-ref", BASE_REF]),
         ("review", review.main, [*common, "--mode", "stub", *pr]),
@@ -89,7 +94,7 @@ def stages(ws: str) -> list[tuple[str, Callable[..., int], list[str]]]:
         ("fix", fix.main, [*common, "--pr", str(PR), "--head-ref", HEAD_REF, "--base-ref", BASE_REF,
                            "--mode", "stub"]),
         ("reverify", test_report.main, [*common, "--stage", "reverify", "--make-outcome", "failure",
-                                        "--base-ref", BASE_REF]),
+                                        "--base-ref", BASE_REF, *rv_results]),
         ("gate-merge", gate.main, [*common, "--gate", "merge", *pr]),
         ("merge", finish.main, ["merge", *common, *pr]),
         ("gate-release", gate.main, [*common, "--gate", "release", *pr]),
@@ -125,7 +130,9 @@ def run(fixture: Path, ws: Path, labels: list[str] | None = None) -> int:
     runner = FakeRunner((fixture / "expected-base.txt").read_text(encoding="utf-8"), labels)
     out = ws / "out"
     skipped: set[str] = set()
-    for name, entry, argv in stages(str(ws)):
+    rv_dir = ws / "reverify-results"
+    plan = stages(str(ws), str(rv_dir) if rv_dir.is_dir() else None)
+    for name, entry, argv in plan:
         if name in skipped:
             continue
         code = entry(argv, runner=runner)
@@ -142,7 +149,7 @@ def run(fixture: Path, ws: Path, labels: list[str] | None = None) -> int:
             return 1
     try:
         lines = [f"{name:<13} {'skipped' if name in skipped else summarize(name, read_stage(out, name))}"
-                 for name, _, _ in stages(str(ws))]
+                 for name, _, _ in plan]
     except ContractError as e:
         print(f"실패: 계약 확인 — {e}", file=sys.stderr)
         return 1

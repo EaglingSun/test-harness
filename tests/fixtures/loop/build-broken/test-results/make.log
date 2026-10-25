@@ -1,0 +1,2 @@
+make: *** [Makefile:12: build/test_speed_monitor] Error 1
+# 빌드 실패 — JUnit XML 이 만들어지지 않았다 (fixture: test status error)

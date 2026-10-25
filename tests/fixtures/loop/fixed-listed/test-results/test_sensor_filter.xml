@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="test_sensor_filter" tests="7" failures="3" errors="0">
+    <testcase classname="test_sensor_filter" name="SR-009_latest_after_push">
+      <failure message="tests/test_sensor_filter.c:18: 11 == sf_latest() (expected 11, actual 0)">tests/test_sensor_filter.c:18: 11 == sf_latest() (expected 11, actual 0) (failed checks: 2)</failure>
+    </testcase>
+    <testcase classname="test_sensor_filter" name="SR-009_latest_after_wraparound">
+      <failure message="tests/test_sensor_filter.c:34: 10 == sf_latest() (expected 10, actual 3)">tests/test_sensor_filter.c:34: 10 == sf_latest() (expected 10, actual 3) (failed checks: 1)</failure>
+    </testcase>
+    <testcase classname="test_sensor_filter" name="SR-001_sensor_value_40000">
+      <failure message="tests/test_sensor_filter.c:43: 40000 == sf_latest() (expected 40000, actual 4)">tests/test_sensor_filter.c:43: 40000 == sf_latest() (expected 40000, actual 4) (failed checks: 1)</failure>
+    </testcase>
+    <testcase classname="test_sensor_filter" name="SR-007_average_truncates"/>
+    <testcase classname="test_sensor_filter" name="SR-007_average_exact"/>
+    <testcase classname="test_sensor_filter" name="SR-008_average_count_1"/>
+    <testcase classname="test_sensor_filter" name="SR-008_average_count_8"/>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="test_diag_log" tests="3" failures="1" errors="0">
+    <testcase classname="test_diag_log" name="SR-011_non_numeric_returns_minus1">
+      <failure message="tests/test_diag_log.c:15: -1 == dl_parse_threshold(&quot;abc&quot;) (expected -1, actual 0)">tests/test_diag_log.c:15: -1 == dl_parse_threshold(&quot;abc&quot;) (expected -1, actual 0) (failed checks: 1)</failure>
+    </testcase>
+    <testcase classname="test_diag_log" name="SR-011_empty_returns_minus1"/>
+    <testcase classname="test_diag_log" name="SR-011_numeric_parses"/>
+  </testsuite>
+</testsuites>

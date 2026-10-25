@@ -42,13 +42,17 @@ def report_data(stage: str) -> dict:
             "expected_head": []}
 
 
+# 기준(R12)으로 go=true 가 되는 upstream: test unexpected 1건 → AUTO_FIX, reverify 깨끗 → PASS.
 UPSTREAM_DATA = {
-    "test": report_data("test"),
+    "test": {**report_data("test"), "failed": ["s::new"], "unexpected": ["s::new"]},
     "reverify": report_data("reverify"),
     "review": {"stage": "review", "status": "ok", "mode": "stub", "counts": {}, "critical_by_category": {},
                "event": "COMMENT", "posted": False, "errors": []},
     "merge": {"stage": "merge", "merged": True, "merge_sha": "9" * 40, "noop": False},
+    "gate-merge": {"stage": "gate-merge", "gate": "merge", "go": True, "decision": "PASS", "reason": "r",
+                   "forced": False, "degraded": False},
 }
+PASS_DECISION = {"autofix": "AUTO_FIX", "merge": "PASS", "release": "PASS"}
 
 
 @pytest.fixture
@@ -72,8 +76,8 @@ def gh_output(ws) -> str:
 def test_no_label_passes(ws, name):
     assert run_gate(ws, name, labels_view("bug")) == 0
     data = read_stage(ws / "out", f"gate-{name}")
-    assert data["go"] is True and data["decision"] == "PASS" and data["forced"] is False
-    assert data["reason"] == "무게이트(1차 뼈대)"
+    assert data["go"] is True and data["decision"] == PASS_DECISION[name] and data["forced"] is False
+    assert "강제 스위치" not in data["reason"]
     assert gh_output(ws) == "go=true\n"
 
 
@@ -92,7 +96,7 @@ def test_other_gate_labels_do_not_block(ws, name):
     others = [f"force-block-{g}" for g in GATES if g != name]
     assert run_gate(ws, name, labels_view(*others)) == 0
     data = read_stage(ws / "out", f"gate-{name}")
-    assert data["go"] is True and data["decision"] == "PASS" and data["forced"] is False
+    assert data["go"] is True and data["decision"] == PASS_DECISION[name] and data["forced"] is False
 
 
 def test_contract_keeps_labels_and_state(ws):
@@ -116,6 +120,7 @@ def test_gh_pr_view_args(ws):
     proc(json.dumps({"labels": [{"nome": "x"}], "state": "OPEN"})),
 ], ids=["exit1", "broken-json", "no-labels", "bad-label"])
 def test_label_read_failure_is_fail_closed(ws, capsys, name, response):
+    (ws / "out" / f"gate-{name}.json").unlink(missing_ok=True)  # merge 는 release 용 upstream 으로 미리 있다
     assert run_gate(ws, name, Fake(response)) == 1
     assert not (ws / "out" / f"gate-{name}.json").exists()
     assert not (ws / "gh_out").exists()

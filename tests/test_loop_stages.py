@@ -74,8 +74,8 @@ def test_review_stub_writes_contract(tmp_path):
 
 @pytest.mark.parametrize("name, upstream", [
     ("autofix", ["test", "review"]),
-    ("merge", ["reverify"]),
-    ("release", ["merge", "reverify"]),
+    ("merge", ["reverify", "review"]),
+    ("release", ["merge", "reverify", "gate-merge"]),
 ])
 def test_gate_fail_closed_without_upstream(tmp_path, monkeypatch, name, upstream):
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
@@ -86,6 +86,7 @@ def test_gate_fail_closed_without_upstream(tmp_path, monkeypatch, name, upstream
         "review": {"stage": "review", "status": "ok", "mode": "stub", "counts": {}, "critical_by_category": {},
                    "event": "COMMENT", "posted": False, "errors": []},
         "merge": {"stage": "merge", "merged": True, "merge_sha": MERGE_SHA, "noop": False},
+        "gate-merge": gate_data("merge"),
     }
     for u in upstream[:-1]:
         write_stage(out, u, present[u])
@@ -100,6 +101,8 @@ def test_gate_passes_and_writes_output(tmp_path, monkeypatch):
     monkeypatch.setenv("GITHUB_OUTPUT", str(gh_out))
     out = tmp_path / "out"
     write_stage(out, "reverify", report_data("reverify"))
+    write_stage(out, "review", {"stage": "review", "status": "ok", "mode": "stub", "counts": {},
+                                "critical_by_category": {}, "event": "COMMENT", "posted": False, "errors": []})
     no_labels = Fake({("gh", "pr", "view"): [proc(json.dumps({"labels": [], "state": "OPEN"}))]})
     assert gate.main(["--workspace", str(tmp_path), "--gate", "merge", "--repo", "o/r", "--pr", "7"],
                      runner=no_labels) == 0
