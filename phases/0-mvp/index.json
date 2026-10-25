@@ -16,7 +16,7 @@
       "status": "completed",
       "started_at": "2026-10-25T16:12:55+0900",
       "summary": "github.py gh 래퍼(GhError, fetch_pull_request/fetch_diff/current_user, download_junit_reports 최신 완료 run 선택·run/artifact 없음 시 [], post_review event 화이트리스트·side=RIGHT, post_issue_comment, stdin JSON ensure_ascii=False) + tests/test_github.py 21건(fake runner)",
-      "completed_at": "2026-10-25T16:14:00+0900"
+      "completed_at": "2026-10-25T16:14:10+0900"
     },
     {
       "step": 2,
