@@ -61,7 +61,10 @@
     {
       "step": 7,
       "name": "severity-fix",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-10-25T17:55:28+0900",
+      "summary": "aggregate.py build_review_plan: 요약 전용(diff 밖 line/파일)으로 분류된 structural_test finding을 major로 조정(인라인 대상은 critical 유지), event·등급 표는 조정 후 등급 기준 + tests/test_aggregate.py 회귀 4건(기존 테스트 기대값 변경 없음)",
+      "completed_at": "2026-10-25T17:56:04+0900"
     }
   ],
   "created_at": "2026-10-25T16:09:12+0900"

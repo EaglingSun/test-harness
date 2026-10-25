@@ -152,6 +152,39 @@ def test_summary_only_critical_counts_for_event():
     assert p.event == "REQUEST_CHANGES"
 
 
+def test_structural_out_of_diff_line_is_summary_only_major_and_comment():
+    p = plan(AgentResult(category="structural_test",
+                         findings=(f("structural_test", line=99, title="diff 밖 테스트 실패"),)))
+    assert p.inline == ()
+    assert "- (major) diff 밖 테스트 실패 — `app.py:99` (요약 전용)" in p.summary_markdown
+    assert "(critical)" not in p.summary_markdown
+    assert p.event == "COMMENT"
+
+
+def test_structural_in_diff_line_stays_inline_critical_and_requests_changes():
+    p = plan(AgentResult(category="structural_test",
+                         findings=(f("structural_test", line=2, title="diff 안 테스트 실패"),)))
+    assert [(c.path, c.line) for c in p.inline] == [("app.py", 2)]
+    assert "- [구조 기반 테스트] (critical) diff 안 테스트 실패" in p.inline[0].body
+    assert p.event == "REQUEST_CHANGES"
+
+
+def test_structural_file_not_in_diff_is_summary_only_major():
+    p = plan(AgentResult(category="structural_test",
+                         findings=(f("structural_test", path="other.py", line=1, title="다른 파일"),)))
+    assert p.inline == ()
+    assert "- (major) 다른 파일 — `other.py:1` (요약 전용)" in p.summary_markdown
+    assert p.event == "COMMENT"
+
+
+def test_structural_out_of_diff_counted_as_major_in_table():
+    p = plan(AgentResult(category="structural_test",
+                         findings=(f("structural_test", line=99), f("structural_test", line=2))))
+    s = p.summary_markdown
+    assert "| Critical | 1 | 0 | 0 | 1 |" in s
+    assert "| Major | 1 | 0 | 0 | 1 |" in s
+
+
 def test_never_approve():
     p = plan()
     assert p.event in ("COMMENT", "REQUEST_CHANGES")

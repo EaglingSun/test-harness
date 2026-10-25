@@ -117,6 +117,9 @@ def build_review_plan(pr: PullRequest, results: Sequence[AgentResult],
             groups.setdefault((f.path, f.line), []).append(f)
         else:
             summary_only.add(i)
+            # ADR-005: 변경 라인 매핑 근거가 없는 A 실패는 요약 전용 major.
+            if f.category == "structural_test":
+                rated[i] = replace(f, severity="major")
     inline = tuple(InlineComment(path=path, line=line, body=_render_inline(groups[(path, line)]))
                    for path, line in sorted(groups))
 
