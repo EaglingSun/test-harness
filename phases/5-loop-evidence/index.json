@@ -2,6 +2,13 @@
   "project": "pr-reviewer",
   "phase": "5-loop-evidence",
   "steps": [
-    { "step": 0, "name": "gate-evidence-upload", "status": "pending" }
-  ]
+    {
+      "step": 0,
+      "name": "gate-evidence-upload",
+      "status": "completed",
+      "started_at": "2026-10-25T23:52:46+0900",
+      "summary": "pr-loop.yml: loop-junit upload if-no-files-found warn(계약 upload 는 error 유지) · 게이트 3개 upload 에 if: !cancelled() (게이트 exit 1 유지) + test_loop_workflow.py 검사 2종(E2E PR #10·#6 근거 주석). red-green-revert: 수정 전 4 failed → 수정 후 44 passed → merge-gate if 제거 시 1 failed → 복원, 전체 425 passed, Scope OK"
+    }
+  ],
+  "created_at": "2026-10-25T23:52:46+0900"
 }

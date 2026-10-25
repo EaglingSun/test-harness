@@ -69,12 +69,13 @@ jobs:
           overwrite: true
           if-no-files-found: error
 
+      # 빌드가 깨지면 XML 이 없다 — warn 으로 두어 test job 을 살리고 판정 불가(status: error)는 게이트가 판정한다
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: loop-junit
           path: test-results/*.xml
           overwrite: true
-          if-no-files-found: error
+          if-no-files-found: warn
 
   review:
     needs: [test]
@@ -127,7 +128,9 @@ jobs:
         working-directory: ${{ vars.LOOP_HOME }}
         run: py -m loop.gate --workspace "${{ github.workspace }}" --gate autofix --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
 
+      # BLOCK(exit 1)이어도 근거(reason)를 artifact 로 남긴다 — always() 는 취소된 run 에서도 돌아 쓰지 않는다
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: ${{ !cancelled() }}
         with:
           name: loop-gate-autofix
           path: out/gate-autofix.json
@@ -219,7 +222,9 @@ jobs:
         working-directory: ${{ vars.LOOP_HOME }}
         run: py -m loop.gate --workspace "${{ github.workspace }}" --gate merge --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
 
+      # BLOCK(exit 1)이어도 근거(reason)를 artifact 로 남긴다 — always() 는 취소된 run 에서도 돌아 쓰지 않는다
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: ${{ !cancelled() }}
         with:
           name: loop-gate-merge
           path: out/gate-merge.json
@@ -278,7 +283,9 @@ jobs:
         working-directory: ${{ vars.LOOP_HOME }}
         run: py -m loop.gate --workspace "${{ github.workspace }}" --gate release --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }}
 
+      # BLOCK(exit 1)이어도 근거(reason)를 artifact 로 남긴다 — always() 는 취소된 run 에서도 돌아 쓰지 않는다
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: ${{ !cancelled() }}
         with:
           name: loop-gate-release
           path: out/gate-release.json
