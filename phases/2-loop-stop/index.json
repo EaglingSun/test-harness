@@ -2,7 +2,18 @@
   "project": "pr-reviewer",
   "phase": "2-loop-stop",
   "steps": [
-    { "step": 0, "name": "gate-switch", "status": "pending" },
-    { "step": 1, "name": "workflow-labels", "status": "pending" }
-  ]
+    {
+      "step": 0,
+      "name": "gate-switch",
+      "status": "completed",
+      "started_at": "2026-10-25T23:10:24+0900",
+      "summary": "gate.py: --repo/--pr 필수 + 실행 시점 gh pr view --json labels,state 로 force-block-<gate> 강제 BLOCK(forced, labels·pr_state 기록, 조회 실패 fail-closed exit 1); run_local.py: --labels + workflow 동일 skip(autofix→fix, merge→merge·gate-release·release, release→release); tests/test_loop_gate_switch.py 신규 · run_local 3케이스 추가 · stages gate 테스트 인자/fake runner만 보강; 전체 364 passed; red-green-revert: gh 실패→PASS 변형 12 failed, 접두사 매칭 변형 7 failed, 복원 후 통과"
+    },
+    {
+      "step": 1,
+      "name": "workflow-labels",
+      "status": "pending"
+    }
+  ],
+  "created_at": "2026-10-25T23:10:24+0900"
 }

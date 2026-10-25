@@ -24,8 +24,9 @@ RELEASE_URL = "https://github.com/local/vsm_test/releases/tag/loop-pr1-fedcba0"
 class FakeRunner:
     """명령 인자로 git/gh 호출을 판별해 결정적 응답을 돌려준다. 호출 (args, stdin)을 기록한다."""
 
-    def __init__(self, expected_base: str):
+    def __init__(self, expected_base: str, labels: list[str] | None = None):
         self.expected_base = expected_base
+        self.labels = list(labels or [])
         self.calls: list[list[str]] = []
         self.pr_views = 0
         self.release_views = 0
@@ -51,6 +52,8 @@ class FakeRunner:
             if sub[0] in ("add", "commit", "push"):
                 return ok()
         if args[0] == "gh":
+            if args[1:3] == ["pr", "view"] and args[-2:] == ["--json", "labels,state"]:
+                return ok(json.dumps({"labels": [{"name": n} for n in self.labels], "state": "OPEN"}))
             if args[1:3] == ["pr", "view"]:
                 self.pr_views += 1
                 if self.pr_views == 1:
@@ -82,14 +85,14 @@ def stages(ws: str) -> list[tuple[str, Callable[..., int], list[str]]]:
     return [
         ("test", test_report.main, [*common, "--stage", "test", "--make-outcome", "failure", "--base-ref", BASE_REF]),
         ("review", review.main, [*common, "--mode", "stub", *pr]),
-        ("gate-autofix", gate.main, [*common, "--gate", "autofix"]),
+        ("gate-autofix", gate.main, [*common, "--gate", "autofix", *pr]),
         ("fix", fix.main, [*common, "--pr", str(PR), "--head-ref", HEAD_REF, "--base-ref", BASE_REF,
                            "--mode", "stub"]),
         ("reverify", test_report.main, [*common, "--stage", "reverify", "--make-outcome", "failure",
                                         "--base-ref", BASE_REF]),
-        ("gate-merge", gate.main, [*common, "--gate", "merge"]),
+        ("gate-merge", gate.main, [*common, "--gate", "merge", *pr]),
         ("merge", finish.main, ["merge", *common, *pr]),
-        ("gate-release", gate.main, [*common, "--gate", "release"]),
+        ("gate-release", gate.main, [*common, "--gate", "release", *pr]),
         ("release", finish.main, ["release", *common, *pr]),
     ]
 
@@ -109,17 +112,37 @@ def summarize(name: str, d: dict) -> str:
     return f"tag={d['tag']} prerelease={d['prerelease']} reused={d['reused']} url={d['url']}"
 
 
-def run(fixture: Path, ws: Path) -> int:
+# 게이트가 막으면 workflow 처럼 건너뛰는 단계: autofix 는 go=false(exit 0), merge · release 는 exit 1.
+BLOCKED_SKIPS: dict[str, tuple[str, ...]] = {
+    "gate-autofix": ("fix",),
+    "gate-merge": ("merge", "gate-release", "release"),
+    "gate-release": ("release",),
+}
+
+
+def run(fixture: Path, ws: Path, labels: list[str] | None = None) -> int:
     prepare_workspace(fixture, ws)
-    runner = FakeRunner((fixture / "expected-base.txt").read_text(encoding="utf-8"))
+    runner = FakeRunner((fixture / "expected-base.txt").read_text(encoding="utf-8"), labels)
     out = ws / "out"
+    skipped: set[str] = set()
     for name, entry, argv in stages(str(ws)):
+        if name in skipped:
+            continue
         code = entry(argv, runner=runner)
+        if name in BLOCKED_SKIPS:
+            try:
+                go = read_stage(out, name)["go"]
+            except ContractError:
+                go = None  # 게이트가 계약을 못 썼다 = 게이트 자체 실패
+            if go is False and code == (0 if name == "gate-autofix" else 1):
+                skipped.update(BLOCKED_SKIPS[name])
+                continue
         if code != 0:
             print(f"실패: {name} 단계가 exit {code}", file=sys.stderr)
             return 1
     try:
-        lines = [f"{name:<13} {summarize(name, read_stage(out, name))}" for name, _, _ in stages(str(ws))]
+        lines = [f"{name:<13} {'skipped' if name in skipped else summarize(name, read_stage(out, name))}"
+                 for name, _, _ in stages(str(ws))]
     except ContractError as e:
         print(f"실패: 계약 확인 — {e}", file=sys.stderr)
         return 1
@@ -136,12 +159,15 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="loop.run_local", description="fake runner로 루프 전 단계를 한 바퀴 돈다")
     p.add_argument("--fixture", required=True, type=Path)
     p.add_argument("--out", type=Path, help="workspace 폴더 (기본: 임시 폴더, 끝나면 삭제)")
+    p.add_argument("--labels", default="", metavar="NAME[,NAME...]",
+                   help="FakeRunner 가 돌려줄 PR 라벨 (예: force-block-merge)")
     args = p.parse_args(argv)
+    labels = [n.strip() for n in args.labels.split(",") if n.strip()]
     if args.out:
         args.out.mkdir(parents=True, exist_ok=True)
-        return run(args.fixture, args.out)
+        return run(args.fixture, args.out, labels)
     with tempfile.TemporaryDirectory() as tmp:
-        return run(args.fixture, Path(tmp))
+        return run(args.fixture, Path(tmp), labels)
 
 
 if __name__ == "__main__":

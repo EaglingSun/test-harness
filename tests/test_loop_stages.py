@@ -89,7 +89,9 @@ def test_gate_fail_closed_without_upstream(tmp_path, monkeypatch, name, upstream
     }
     for u in upstream[:-1]:
         write_stage(out, u, present[u])
-    assert gate.main(["--workspace", str(tmp_path), "--gate", name]) == 1
+    no_labels = Fake({("gh", "pr", "view"): [proc(json.dumps({"labels": [], "state": "OPEN"}))]})
+    assert gate.main(["--workspace", str(tmp_path), "--gate", name, "--repo", "o/r", "--pr", "7"],
+                     runner=no_labels) == 1
     assert not (out / f"gate-{name}.json").exists()
 
 
@@ -98,7 +100,9 @@ def test_gate_passes_and_writes_output(tmp_path, monkeypatch):
     monkeypatch.setenv("GITHUB_OUTPUT", str(gh_out))
     out = tmp_path / "out"
     write_stage(out, "reverify", report_data("reverify"))
-    assert gate.main(["--workspace", str(tmp_path), "--gate", "merge"]) == 0
+    no_labels = Fake({("gh", "pr", "view"): [proc(json.dumps({"labels": [], "state": "OPEN"}))]})
+    assert gate.main(["--workspace", str(tmp_path), "--gate", "merge", "--repo", "o/r", "--pr", "7"],
+                     runner=no_labels) == 0
     data = read_stage(out, "gate-merge")
     assert data["go"] is True and data["decision"] == "PASS" and data["forced"] is False
     assert gh_out.read_text(encoding="utf-8") == "go=true\n"
