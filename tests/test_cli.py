@@ -240,3 +240,121 @@ def test_non_integer_pr_number_exits(capsys):
     with pytest.raises(SystemExit) as exc:
         main(["o/r", "abc"], runner=FakeRunner())
     assert exc.value.code != 0
+
+
+# --- R9: --junit-dir / --plan-out / --current-user ---
+
+JUNIT_XML_2 = """<?xml version="1.0"?>
+<testsuite name="s2" tests="1">
+  <testcase name="test_partition" classname="tests.test_more">
+    <failure message="ValueError: bad class">Traceback ...</failure>
+  </testcase>
+</testsuite>
+"""
+
+
+def test_junit_dir_reads_local_xml_without_artifact_download(tmp_path, capsys):
+    (tmp_path / "a.xml").write_text(JUNIT_XML, encoding="utf-8")
+    (tmp_path / "b.xml").write_text(JUNIT_XML_2, encoding="utf-8")
+    fake = FakeRunner(junit_xml=None)  # artifact 경로를 탔다면 결과 없음이 되어 A가 skip된다
+    code = main(["o/r", "7", "--dry-run", "--junit-dir", str(tmp_path)], runner=fake)
+
+    assert code == 0
+    assert "run_list" not in fake.kinds()
+    assert "run_download" not in fake.kinds()
+    a_stdin = next(stdin for kind, _, stdin in fake.calls if kind == "A")
+    assert "test_bound" in a_stdin
+    assert "test_partition" in a_stdin
+    out = json.loads(capsys.readouterr().out)
+    assert "총 3건 중 실패 2건" in out["summary_markdown"]
+
+
+def test_junit_dir_wins_over_junit_artifact(tmp_path, capsys):
+    (tmp_path / "a.xml").write_text(JUNIT_XML, encoding="utf-8")
+    fake = FakeRunner()
+    code = main(["o/r", "7", "--dry-run", "--junit-artifact", "my-results", "--junit-dir", str(tmp_path)],
+                runner=fake)
+    assert code == 0
+    assert "run_list" not in fake.kinds()
+    assert "run_download" not in fake.kinds()
+    assert "A" in fake.kinds()
+
+
+def test_junit_dir_without_xml_warns_and_skips_agent_a(tmp_path, capsys):
+    (tmp_path / "notes.txt").write_text("not xml", encoding="utf-8")
+    fake = FakeRunner()
+    code = main(["o/r", "7", "--dry-run", "--junit-dir", str(tmp_path)], runner=fake)
+
+    assert code == 0
+    captured = capsys.readouterr()
+    assert f"경고: --junit-dir 에 JUnit XML 이 없다: {tmp_path}" in captured.err
+    out = json.loads(captured.out)
+    assert out["agents"][0]["skipped_reason"] == "테스트 결과 없음"
+    assert "A" not in fake.kinds()
+    assert "run_list" not in fake.kinds()
+
+
+def test_junit_dir_broken_xml_warns_and_continues(tmp_path, capsys):
+    (tmp_path / "broken.xml").write_text("<testsuite><testcase", encoding="utf-8")
+    fake = FakeRunner()
+    code = main(["o/r", "7", "--dry-run", "--junit-dir", str(tmp_path)], runner=fake)
+
+    assert code == 0
+    captured = capsys.readouterr()
+    assert "JUnit XML 파싱 실패" in captured.err
+    assert "broken.xml" in captured.err
+    assert json.loads(captured.out)["agents"][0]["skipped_reason"] == "테스트 결과 없음"
+    assert "A" not in fake.kinds()
+
+
+def test_plan_out_with_dry_run_matches_stdout(tmp_path, capsys):
+    plan_path = tmp_path / "plan.json"
+    fake = FakeRunner()
+    code = main(["o/r", "7", "--dry-run", "--plan-out", str(plan_path)], runner=fake)
+
+    assert code == 0
+    assert fake.posts() == []
+    stdout_payload = json.loads(capsys.readouterr().out)
+    text = plan_path.read_text(encoding="utf-8")
+    assert json.loads(text) == stdout_payload
+    assert "## PR 리뷰 결과" in text  # ensure_ascii=False
+
+
+def test_plan_out_written_before_posting_even_if_review_post_fails(tmp_path, capsys):
+    plan_path = tmp_path / "plan.json"
+    fake = FakeRunner(post_review=proc(code=1, stderr="HTTP 422: Unprocessable Entity"))
+    code = main(["o/r", "7", "--plan-out", str(plan_path)], runner=fake)
+
+    assert code == 1
+    assert plan_path.exists()
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    assert plan["event"] == "REQUEST_CHANGES"
+    assert [c["path"] for c in plan["inline"]] == ["app.py"]
+
+
+def test_current_user_option_skips_gh_api_user(capsys):
+    fake = FakeRunner()
+    code = main(["o/r", "7", "--dry-run", "--current-user", "bot"], runner=fake)
+
+    assert code == 0
+    assert "user" not in fake.kinds()
+    assert json.loads(capsys.readouterr().out)["event"] == "REQUEST_CHANGES"  # 작성자 dev != bot
+
+
+def test_current_user_equal_to_author_applies_own_pr_rule(capsys):
+    fake = FakeRunner(pr=proc(json.dumps({"head": {"sha": "abc123"}, "user": {"login": "bot"},
+                                          "html_url": "https://github.com/o/r/pull/7"})))
+    code = main(["o/r", "7", "--dry-run", "--current-user", "bot"], runner=fake)
+
+    assert code == 0
+    assert "user" not in fake.kinds()
+    out = json.loads(capsys.readouterr().out)
+    assert out["event"] == "COMMENT"
+    assert "Critical 있음(변경 요청 대상)" in out["summary_markdown"]
+
+
+def test_without_new_options_calls_gh_api_user(capsys):
+    fake = FakeRunner()
+    assert main(["o/r", "7", "--dry-run"], runner=fake) == 0
+    assert "user" in fake.kinds()
+    assert "run_download" in fake.kinds()
