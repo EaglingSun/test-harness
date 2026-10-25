@@ -55,3 +55,17 @@ MVP 속도 최우선. 외부 패키지 없이 이미 설치·인증된 CLI(`gh`,
 - 게시: 전 등급 인라인. diff 밖 라인은 요약으로 강등. 강등 후 critical이 1건 이상이면 review event `REQUEST_CHANGES`, 아니면 `COMMENT`. PR 작성자 == 현재 gh 사용자이면 `COMMENT`로 대체하고 요약에 "Critical 있음(변경 요청 대상)"을 표시한다.
 **이유**: 테스트를 실행하지 않은 정적 판정은 critical 오탐 위험이 있고, REQUEST_CHANGES는 머지를 막으므로 근거 없는 고등급을 코드로 억제한다. GitHub는 자기 PR에 REQUEST_CHANGES를 422로 거부한다.
 **트레이드오프**: 실제 critical이 근거 기재 누락으로 major로 내려갈 수 있다.
+
+### ADR-006: PR 루프 — 한 workflow job 체인 · self-hosted · 단계 간 계약 · workflow 내부 게이트
+**Status**: Accepted (2026-10-25, 실장 위임 D-6 · 플랜 `C:\lab\2nd_NGV\docs\plans\2026-10-25-pr-autofix-loop-1차.md`)
+**결정**:
+- PR 루프는 workflow 하나(`pr-loop.yml`) 안의 job 체인이다: test → review → autofix-gate → fix → reverify → merge-gate → merge → release-gate → release. 모든 job은 `runs-on: [self-hosted, vsm-loop]`.
+- 단계 스크립트는 `loop/`에 두고, workflow는 `working-directory: ${{ vars.LOOP_HOME }}`에서 `py -m loop.<단계> --workspace <vsm checkout>`로 부른다. `LOOP_HOME`은 runner PC의 test_harness 로컬 경로다.
+- 단계 간 데이터는 `<workspace>/out/<단계>.json`(스키마 `loop/contract.py`)이다. job 사이는 artifact `loop-<단계>`로 옮긴다.
+- 게이트는 되돌리기 어려운 동작(수정 push · 머지 · 릴리스) 바로 앞에 두고, workflow 안에서만 막는다(BLOCK = exit 1 → 다음 동작 job skip). Free 개인 계정 private 저장소는 branch protection · ruleset이 403이다(2026-10-25 실측).
+- 토큰은 `GITHUB_TOKEN`(`permissions: contents: write, pull-requests: write`)만 쓴다. PAT로 push하면 새 run이 자동으로 돌아 Fix가 반복될 수 있다.
+- test·reverify 단계는 판정하지 않는다. make 결과·분류(unexpected/fixed/missing)를 넘기고 판정은 게이트가 한다. 분류 기준 목록은 base 브랜치 판 `tests/expected_failures.txt`다(PR이 목록을 고쳐 실패를 숨기지 못하게).
+- 안전 레일: Fix 상한 1회(PR 고유 커밋 `origin/<base>..HEAD`의 `Loop-Fix:` 트레일러) · 실습용 prerelease만 · job timeout 30분 + claude 900초 · 인라인은 commentable line만(ADR-003).
+- workflow 구조 테스트는 PyYAML을 **테스트에서만** 쓴다(설치됨, `vsm_test/tests/test_ci_workflow.py` 선례). 구현 코드는 ADR-001대로 표준 라이브러리만.
+**이유**: 실습에서 루프 전체가 Actions 화면에 job 단위로 보여야 하고, 게이트가 막는 지점이 체크 색으로 드러나야 한다. 수강생 PC가 runner이므로 claude 인증과 test_harness 로컬 경로를 그대로 쓸 수 있다.
+**트레이드오프**: 사람이 수동으로 머지하는 것은 막지 못한다. 한 run 안에서 job마다 checkout·artifact 왕복 시간이 든다. LOOP_HOME이 로컬 경로라 runner PC에 test_harness가 있어야 한다.

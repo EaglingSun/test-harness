@@ -1,0 +1,10 @@
+{
+  "project": "pr-reviewer",
+  "phase": "1-loop-nogate",
+  "steps": [
+    { "step": 0, "name": "loop-skeleton", "status": "pending" },
+    { "step": 1, "name": "workflow-template", "status": "pending" },
+    { "step": 2, "name": "reviewer-cli-options", "status": "pending" },
+    { "step": 3, "name": "review-real-mode", "status": "pending" }
+  ]
+}

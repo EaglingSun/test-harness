@@ -22,9 +22,13 @@ GitHub PR 한 건에 대해 관점이 다른 리뷰 에이전트 3개를 병렬�
 | R4 | 심각도(Critical/Major/Minor) 규칙 적용(ADR-005), 같은 path+line 병합, diff 밖 라인 요약 강등, 관점별 markdown 요약 렌더링 | `pytest -q tests/test_aggregate.py` |
 | R5 | 인라인 코멘트를 담은 PR Review 1건(Critical 있으면 REQUEST_CHANGES, 자기 PR이면 COMMENT)과 요약 Issue comment 1건을 게시한다 | `pytest -q tests/test_github.py tests/test_aggregate.py` |
 | R6 | CLI `py -m pr_reviewer <owner/repo> <PR번호> [--dry-run] [--junit-artifact NAME]`. `--dry-run`은 게시 없이 payload를 출력한다 | `pytest -q tests/test_cli.py` |
+| R7 | PR 루프 뼈대(무게이트): `loop/` 단계 스크립트(test · review · gate · fix · finish)가 단계 간 계약 JSON(`out/<단계>.json`)을 주고받고, 게이트는 항상 통과한다. `loop/run_local.py`가 fake runner로 전 단계를 한 바퀴 돈다 | `pytest -q tests/test_loop_*.py` + `py -m loop.run_local --fixture tests/fixtures/loop/basic --out <tmp>` |
+| R8 | workflow 틀 `loop/templates/pr-loop.yml`: 한 workflow 안 job 체인(test → review → autofix-gate → fix → reverify → merge-gate → merge → release-gate → release), self-hosted, 고정 SHA | `pytest -q tests/test_loop_workflow.py` |
+| R9 | `pr_reviewer` CLI 옵션 `--junit-dir PATH`(로컬 JUnit) · `--plan-out PATH`(payload JSON 저장) · `--current-user LOGIN`(`gh api user` 생략) | `pytest -q tests/test_cli.py` |
+| R10 | 루프 review 단계 real 모드: `pr_reviewer`를 R9 옵션으로 실행하고 결과를 review 계약 JSON으로 변환 | `pytest -q tests/test_loop_review.py` |
 
 ## MVP 제외 사항
-- GitHub Actions/Webhook 자동 트리거 — 필요하면 PROPOSALS.md로
+- GitHub Actions/Webhook 자동 트리거 — 필요하면 PROPOSALS.md로 (2026-10-25: self-hosted PR 루프 R7~R10으로 일부 편입)
 - 재리뷰 시 기존 코멘트 갱신/삭제
 - 대형 diff 분할, 모델 선택 옵션
 - 커버리지 리포트 연계, Critical 재현 테스트 자동 생성
@@ -32,3 +36,4 @@ GitHub PR 한 건에 대해 관점이 다른 리뷰 에이전트 3개를 병렬�
 
 ## 변경 이력
 - 2026-10-25: 초안 승인
+- 2026-10-25: R7~R10 추가(PR Autofix CI/CD 실습 1차 실측 — `C:\lab\2nd_NGV\docs\plans\2026-10-25-pr-autofix-loop-1차.md`). 실장 대화 승인(위임 D-6 · 「승인」). PROPOSALS P4 범위의 편입이며, P4의 `[x]` 표시는 Human만 하므로 건드리지 않았다.
