@@ -13,7 +13,10 @@
     {
       "step": 1,
       "name": "fix-real-mode",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-10-25T23:22:15+0900",
+      "summary": "proc.run_process 에 키워드 cwd 추가(기존 호출 호환, test_proc.py) · loop/fix.py --mode real: Fix 상한 검사 뒤 out/test.json unexpected + out/*.xml failure message + test_ref/요구사항.md 로 프롬프트를 코드로 조립 → claude -p acceptEdits(Read·Edit·Glob·Grep, Bash·Write 금지, cwd=workspace, 600초, claude_runner 주입) → git status --porcelain 로 바뀐 경로 검사(0개 NO_ACTION · src/·include/ 밖이면 checkout/clean 되돌림 + FAILED exit1 · 통과 시 fix(loop) 커밋 + Loop-Fix 트레일러 push, changed_files) · claude 비정상 종료/timeout 은 FAILED + out/fix-claude-raw.txt(앞 2000자) · pr-loop.yml fix --mode ${{ vars.LOOP_FIX_MODE || 'stub' }} + 머리 주석 변수 · test_loop_fix_real.py 13건 + workflow 1건. red-green-revert: 밖 경로 판정 끔 → 5 fail · Fix 상한을 claude 호출 뒤로 → 3 fail(상한 테스트 포함), 원복 후 420 passed · run_local new-defect exit 0 · Scope OK",
+      "completed_at": "2026-10-25T23:40:00+0900"
     }
   ],
   "created_at": "2026-10-25T23:17:27+0900"

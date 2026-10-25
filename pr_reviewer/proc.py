@@ -6,12 +6,14 @@ from typing import Callable
 Runner = Callable[[list[str], str | None], subprocess.CompletedProcess]
 
 
-def run_process(args: list[str], input: str | None = None, timeout: float = 900) -> subprocess.CompletedProcess:
-    """shell=False, capture_output, text, encoding='utf-8', errors='replace', check=False."""
+def run_process(args: list[str], input: str | None = None, timeout: float = 900,
+                cwd: str | None = None) -> subprocess.CompletedProcess:
+    """shell=False, capture_output, text, encoding='utf-8', errors='replace', check=False. cwd 는 키워드로만 쓴다."""
     return subprocess.run(
         args,
         input=input,
         timeout=timeout,
+        cwd=cwd,
         shell=False,
         capture_output=True,
         text=True,

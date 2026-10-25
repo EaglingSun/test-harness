@@ -6,6 +6,7 @@
 #   2. 저장소 변수(Settings → Secrets and variables → Actions → Variables)
 #      - LOOP_HOME        : runner PC 의 test_harness 로컬 경로 (예: C:\lab\2nd_NGV\test-harness). 단계 스크립트를 여기서 부른다.
 #      - LOOP_REVIEW_MODE : review 단계 모드. 비우면 stub.
+#      - LOOP_FIX_MODE    : fix 단계 모드(stub · real). 비우면 stub. real 은 claude 가 src/·include/ 만 고친다(ADR-007).
 #   3. self-hosted runner 를 라벨 vsm-loop 로 등록한다. runner PC 에 py · gh · claude · gcc(setup\setup_gcc.ps1) 가 있어야 한다.
 #   4. 게이트 강제 스위치 라벨 3개 생성: gh label create force-block-autofix · force-block-merge · force-block-release
 #
@@ -153,7 +154,7 @@ jobs:
       # GITHUB_TOKEN 으로 push 한다 — 이 push 는 새 run 을 만들지 않는다
       - name: 수정
         working-directory: ${{ vars.LOOP_HOME }}
-        run: py -m loop.fix --workspace "${{ github.workspace }}" --pr ${{ github.event.pull_request.number }} --head-ref ${{ github.head_ref }} --base-ref origin/${{ github.base_ref }} --mode stub
+        run: py -m loop.fix --workspace "${{ github.workspace }}" --pr ${{ github.event.pull_request.number }} --head-ref ${{ github.head_ref }} --base-ref origin/${{ github.base_ref }} --mode ${{ vars.LOOP_FIX_MODE || 'stub' }}
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:

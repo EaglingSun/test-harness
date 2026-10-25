@@ -158,6 +158,14 @@ def test_fix_runs_only_when_gate_go(jobs):
     assert any(s.get("id") == "gate" for s in jobs["autofix-gate"]["steps"])
 
 
+def test_fix_mode_from_repo_variable(jobs, text):
+    runs = [s["run"] for s in jobs["fix"]["steps"] if "py -m loop.fix" in s.get("run", "")]
+    assert len(runs) == 1
+    assert "--mode ${{ vars.LOOP_FIX_MODE || 'stub' }}" in runs[0]
+    assert "--mode stub" not in runs[0]
+    assert "LOOP_FIX_MODE" in text.split("name: pr-loop")[0]  # 머리 주석 변수 목록
+
+
 def test_reverify_runs_when_fix_skipped(jobs):
     cond = jobs["reverify"]["if"]
     assert "!cancelled()" in cond
