@@ -16,7 +16,7 @@
       "status": "completed",
       "started_at": "2026-10-25T22:51:08+0900",
       "summary": "loop/templates/pr-loop.yml(9 job 체인·self-hosted vsm-loop·SHA 고정 3 action·LOOP_HOME working-directory·artifact loop-<단계>) + tests/test_loop_workflow.py 32건; pytest 318 passed, scope OK; red-green: reverify if 에서 fix skipped 제거 → 1 fail, download-artifact SHA 1자 변경 → 1 fail, 되돌림 후 green",
-      "completed_at": "2026-10-25T22:53:39+0900"
+      "completed_at": "2026-10-25T22:53:55+0900"
     },
     {
       "step": 2,
