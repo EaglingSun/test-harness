@@ -126,6 +126,35 @@ def test_structural_prompt_contains_failures_and_diff():
                                        failure_scenario="입력 → 기대 vs 실제", reachability=""),)
 
 
+STRUCTURAL_LOCATION_PHRASES = (
+    "원인이 된 제품 코드",
+    "테스트 코드(assert/expect 줄, 테스트 파일)의 위치를 적지 마라",
+    "원인 코드가 diff 밖이거나(이 PR이 바꾸지 않은 코드) 특정할 수 없으면 line을 null로 둔다",
+    "실패한 테스트 파일 경로",
+    "테스트 코드 자체가 이 PR에서 잘못 작성되어 실패한 경우",
+)
+
+
+def test_structural_prompt_has_cause_location_rules():
+    runner = FakeRunner(A=[])
+
+    review_structural_tests(PR, DIFF, TestReport(total=3, failures=(FAILURE,)), runner)
+
+    _, stdin = runner.call("A")
+    for text in STRUCTURAL_LOCATION_PHRASES:
+        assert text in stdin
+
+
+def test_security_prompt_has_no_structural_location_rules():
+    runner = FakeRunner(B=[])
+
+    review_security(PR, DIFF, runner)
+
+    _, stdin = runner.call("B")
+    for text in STRUCTURAL_LOCATION_PHRASES:
+        assert text not in stdin
+
+
 # --- B: 보안 ---
 
 

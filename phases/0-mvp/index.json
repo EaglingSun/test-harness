@@ -69,7 +69,9 @@
     {
       "step": 8,
       "name": "structural-prompt-fix",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-10-25T18:57:30+0900",
+      "summary": "agents.py review_structural_tests 프롬프트에 A 전용 위치 규칙 추가(path/line=원인 제품 코드, 테스트 assert/파일 위치 금지, 원인이 diff 밖·불명이면 line null·path는 추정 원인 파일 또는 실패 테스트 파일, PR이 잘못 쓴 테스트면 그 줄+body 근거), LOCATION_RULES 불변 + tests/test_agents.py A 프롬프트 포함·B 프롬프트 미포함 검사 2건"
     }
   ],
   "created_at": "2026-10-25T16:09:12+0900"

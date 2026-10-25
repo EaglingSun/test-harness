@@ -103,6 +103,9 @@ def review_structural_tests(pr: PullRequest, diff: str, report: TestReport | Non
 ## 지시
 - 관점은 로직 오류, 예외 처리 누락, 경계값, 동등분할이다. 아래 실패들 외의 문제는 보고하지 마라.
 - 각 실패의 원인이 된 변경 코드 위치를 path/line으로 적어라. 근거가 없으면 line을 null로 둔다.
+- path/line은 실패의 원인이 된 제품 코드 위치다. 실패를 검출한 테스트 코드(assert/expect 줄, 테스트 파일)의 위치를 적지 마라.
+- 원인 코드가 diff 밖이거나(이 PR이 바꾸지 않은 코드) 특정할 수 없으면 line을 null로 둔다. 이때 path에는 원인으로 추정되는 파일 경로를 적고, 모르면 실패한 테스트 파일 경로를 적는다.
+- 단, 테스트 코드 자체가 이 PR에서 잘못 작성되어 실패한 경우(기대값 오류 등)에는 그 테스트 줄이 원인 코드이므로 line을 적고, body에 그렇게 판단한 근거를 적는다.
 - failure_scenario에는 테스트 이름과 실패 메시지를 적어라.
 - category는 항상 "structural_test"로 둔다.
 - 도구를 쓰지 말고 주어진 정보만으로 답하라.
