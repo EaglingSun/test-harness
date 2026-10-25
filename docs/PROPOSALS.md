@@ -14,3 +14,5 @@
 - [ ] P7 | 0-mvp/design | 대형 diff 분할 리뷰, 모델 선택 옵션 | 큰 PR 대응과 비용 조절
 - [ ] P8 | 0-mvp/step6 | JUnit run 조회(`gh run list`)·요약 코멘트 게시의 GhError도 CLI에서 잡아 stderr 메시지+exit 1로 처리 | 현재는 traceback으로 종료
 - [ ] P9 | 0-mvp/review | git이 따옴표로 감싼 비ASCII 파일 경로(`+++ "b/\355..."`)를 diff.py에서 해석해 인라인 대상에 포함 | 현재는 해당 파일 지적이 모두 요약 전용으로 강등됨
+- [ ] P10 | 0-mvp/E2E | 스모크 절차 문서화(`docs/SMOKE.md`)와 S1~S5 기대 결과 자동 대조 스크립트 | 실습에서 리뷰어 수정 후 반복 검증
+- [ ] P11 | 0-mvp/E2E | 구조 기반 테스트: 실패를 base 브랜치 최신 run 결과와 비교해 "기존 실패/신규 실패"를 결정적으로 구분 | 현재는 LLM이 원인 위치로 판단, base에서도 실패하면 이 PR 무관이 확정됨
