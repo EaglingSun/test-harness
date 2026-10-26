@@ -62,6 +62,8 @@
 - `tests/test_loop_review.py`: real — event REQUEST_CHANGES → True · COMMENT + OWN_PR_CRITICAL 문구 → True · COMMENT 만 → False · plan 없음 → False. stub → False.
 - `tests/test_loop_workflow.py`: labeled 조건과 concurrency group 이 `review-accepted` 를 포함한다.
 - `tests/test_loop_contract.py`: review 계약에 `critical_posted` 가 없으면 read 가 거부한다.
+- review 계약을 직접 만드는 기존 시험 dict(`tests/test_loop_gate_switch.py` `UPSTREAM_DATA['review']` · `tests/test_loop_stages.py` review dict 2곳)에는 `"critical_posted": False` 만 더한다 — assert 를 바꾸지 않는다(2026-10-26 blocked 재계획 · 실장 승인 전 Stop 훅 실패로 진행).
+- 이전 실행이 남긴 범위 안 변경(미커밋)이 작업 트리에 있다 — 읽고 이어서 완성한다.
 
 ## 요구사항 ID
 
@@ -79,6 +81,8 @@ R15
 - `tests/test_loop_review.py`
 - `tests/test_loop_workflow.py`
 - `tests/test_loop_contract.py`
+- `tests/test_loop_gate_switch.py`
+- `tests/test_loop_stages.py`
 
 ## Acceptance Criteria
 
