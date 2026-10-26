@@ -1,0 +1,7 @@
+{
+  "project": "pr-reviewer",
+  "phase": "9-kit1-fixtures",
+  "steps": [
+    { "step": 0, "name": "nogate-fixtures", "status": "pending" }
+  ]
+}
