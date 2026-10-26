@@ -1,0 +1,12 @@
+# 결함판(master)에서 실패해야 하는 테스트 — 한 줄에 하나, 형식 <스위트>::<케이스>
+#   예) test_speed_monitor::SR-002_speed_200_is_high
+# tests/check_junit.py --expect 가 실제 실패 집합과 이 목록을 대조한다 (빈 줄 · # 줄은 무시).
+# 결함 수정 phase 에서는 고친 만큼 이 목록에서 지운다.
+test_speed_monitor::SEC3_speed_0_is_none
+test_speed_monitor::SR-002_speed_200_is_high
+test_speed_monitor::SR-010_count_follows_high_with_brake
+test_sensor_filter::SR-009_latest_after_push
+test_sensor_filter::SR-009_latest_after_wraparound
+test_sensor_filter::SR-001_sensor_value_40000
+test_diag_log::SR-011_non_numeric_returns_minus1
+test_diag_log::SR-011_empty_returns_minus1
