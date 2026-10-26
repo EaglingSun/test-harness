@@ -12,7 +12,8 @@
     },
     {
       "dir": "9-kit1-fixtures",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-10-27T01:09:40+0900"
     }
   ]
 }
