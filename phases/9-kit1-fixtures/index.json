@@ -7,7 +7,8 @@
       "name": "nogate-fixtures",
       "status": "completed",
       "started_at": "2026-10-27T01:03:48+0900",
-      "summary": "kit-5 fixture 4종(new-defect·fixed-listed·fixed-unlisted·build-broken) 바이트 복사 + test_loop_run_local.py parametrize 회귀 시험 4건(게이트 3곳 PASS·prerelease·test 계약 값); 전체 340 passed; red-green-revert: new-defect unexpected 0건 기대 시 1 failed 확인 후 복원"
+      "summary": "kit-5 fixture 4종(new-defect·fixed-listed·fixed-unlisted·build-broken) 바이트 복사 + test_loop_run_local.py parametrize 회귀 시험 4건(게이트 3곳 PASS·prerelease·test 계약 값); 전체 340 passed; red-green-revert: new-defect unexpected 0건 기대 시 1 failed 확인 후 복원",
+      "completed_at": "2026-10-27T01:04:41+0900"
     }
   ],
   "created_at": "2026-10-27T01:03:48+0900"
