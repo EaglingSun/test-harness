@@ -1,0 +1,11 @@
+{
+  "project": "pr-reviewer",
+  "phase": "7-loop-review-critical",
+  "steps": [
+    {
+      "step": 0,
+      "name": "review-critical-needs-human",
+      "status": "pending"
+    }
+  ]
+}

@@ -75,7 +75,7 @@ MVP 속도 최우선. 외부 패키지 없이 이미 설치·인증된 CLI(`gh`,
 **결정**:
 - 판정은 결정적 코드(`loop/gate.py` 순수 함수)로 한다. LLM은 판정하지 않는다. 강제 스위치(`force-block-<게이트>`)가 기준보다 먼저다.
 - autofix: test error → NEEDS_INVESTIGATION · unexpected 0 → NO_ACTION · 1~3 → AUTO_FIX(go) · 4 이상 → NEEDS_HUMAN. go가 false여도 job은 성공(fix만 skip).
-- merge: reverify error → BLOCK(판정 불가 = fail-closed) · unexpected(ⓐ) 또는 missing(ⓒ) → BLOCK · fixed(ⓑ)가 head 목록에 남아 있으면 BLOCK(「목록 갱신 필요 — 사람 몫」) · 그 밖 PASS. 리뷰 critical은 막지 않는다(정적 추정). 리뷰 실패는 PASS + `degraded: true`(release까지 전파). 리뷰 부분 실패(status ok + `errors` 1건 이상)도 degraded로 표시한다(2026-10-26 실장 결정 §8 #4 · R14).
+- merge: reverify error → BLOCK(판정 불가 = fail-closed) · unexpected(ⓐ) 또는 missing(ⓒ) → BLOCK · fixed(ⓑ)가 head 목록에 남아 있으면 BLOCK(「목록 갱신 필요 — 사람 몫」) · 그 밖 PASS. 리뷰 critical(게시 기준 — 강등 뒤 `REQUEST_CHANGES` 근거와 같은 값)이 있으면 NEEDS_HUMAN 으로 막는다 — PR 에 라벨 `review-accepted` 가 있으면 사람이 확인한 것으로 보고 막지 않는다(2026-10-26 실장 결정 · §8 #1 「막지 않음」을 뒤집음 · R15). reverify 가 막으면 그 BLOCK 이 먼저다. 리뷰 실패는 PASS + `degraded: true`(release까지 전파). 리뷰 부분 실패(status ok + `errors` 1건 이상)도 degraded로 표시한다(2026-10-26 실장 결정 §8 #4 · R14).
 - release: merge 됨 + reverify가 merge 기준 통과 → PASS.
 - Fix real(선택, 기본 stub): `claude -p --permission-mode acceptEdits`, 허용 도구 Read·Edit·Glob·Grep, cwd = workspace, timeout 600초. 편집 허용은 `src/`·`include/`만이고, 끝난 뒤 `git status`로 바뀐 경로를 코드로 검사해 밖이면 되돌리고 FAILED. 채점 기준(`tests/expected_failures.txt`)은 Fix가 못 고친다.
 - `proc.run_process`에 키워드 `cwd`를 더한다(기존 호출 호환).
