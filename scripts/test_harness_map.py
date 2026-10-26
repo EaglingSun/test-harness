@@ -372,6 +372,30 @@ class TestRender:
         for sec in ("summary", "layers", "flow", "trace", "scope", "proposals", "health"):
             assert f'id="{sec}"' in text
 
+    def test_every_section_has_note(self, project):
+        """
+        대상: render() — 절 각주
+        구분: 정상
+        오라클: (명세) 7개 절마다 제목 아래 각주(class="note")가 있고, NOTES 키가 절 id 7개와 같다.
+        """
+        text = hm.generate(project)[0].read_text(encoding="utf-8")
+        secs = ("summary", "layers", "flow", "trace", "scope", "proposals", "health")
+        assert set(hm.NOTES) == set(secs)
+        for sec in secs:
+            body = text.split(f'id="{sec}"', 1)[1].split("</section>", 1)[0]
+            assert 'class="note"' in body, sec
+
+    def test_kpi_and_layer_notes(self, project):
+        """
+        대상: _render_summary() · _render_layers() — 요소 각주
+        구분: 정상
+        오라클: (명세) KPI 카드 5개마다 각주가 있고, Layers 의 CRITICAL 규칙 · Hooks · Commands · Skills 제목 뒤에 각주가 붙는다.
+        """
+        text = hm.generate(project)[0].read_text(encoding="utf-8")
+        assert text.count('class="kpi-note"') == 5
+        for title in ("CRITICAL 규칙", "Hooks", "Commands · Skills"):
+            assert f'{title}</h3><p class="note">' in text, title
+
     def test_values_are_escaped(self, project):
         """
         대상: render() — HTML 이스케이프

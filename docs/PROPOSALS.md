@@ -18,3 +18,4 @@
 - [ ] P11 | 0-mvp/E2E | 구조 기반 테스트: 실패를 base 브랜치 최신 run 결과와 비교해 "기존 실패/신규 실패"를 결정적으로 구분 | 현재는 LLM이 원인 위치로 판단, base에서도 실패하면 이 PR 무관이 확정됨
 - [ ] P12 | 1-loop-nogate/step0 | scope_check.py가 `/`로 끝나는 허용 패턴(`tests/fixtures/loop/`)을 디렉터리 접두사로 해석 | 현재 fnmatch 완전 일치라 하위 파일이 모두 위반으로 잡혀 step0.md를 `tests/fixtures/loop/*`로 고쳤다(step3.md도 같은 패턴)
 - [ ] P13 | 6-loop-degraded/design | review 계약 counts를 게시 요약과 같은 집계 후 등급으로 맞추거나 두 값을 함께 기록 | 1차 D5: 원천 등급 critical 0 ≠ 게시 요약 Critical 1 (현재 counts_basis: agent_raw 표시만)
+- [ ] P14 | 2차수 실습 설계/gate | 게이트 기준 대장 `docs/GATES.md`(행 = 기준 1종 · 대상 · 판정 근거 · 자동 기준 · 보류/사람 확인 · 다음 행동 · 정본 위치 · 승인자) + 코드 상수에 GATE-ID 주석 + harness_map Health 가 대장 ↔ 코드 정본 위치 불일치를 error 로 + 대장 · 기준 상수 변경은 PreToolUse 확인 · 게이트는 base 판에서 읽음 · LLM 리뷰 기준은 `criteria/*.md` 로 분리 | 지금 기준 16종 · 판정 어휘 6벌이 코드 상수 · 프롬프트 문자열 · Agent 파일 · 임시 프롬프트 · Skill 로 흩어져 있고 문서 ↔ 코드 동기화는 C5 강사 게이트만 시험으로 묶임(2026-10-26 실장 제안)

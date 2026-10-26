@@ -56,6 +56,31 @@ STATUSES = ("completed", "pending", "error", "blocked")  # execute.py step 상�
 # Health level 정렬 순서. error: 하네스가 의도대로 동작하지 않음 / warn: 동작하지만 Guard가 약함 / info: 참고
 LEVEL_ORDER = {"error": 0, "warn": 1, "info": 2}
 
+# 화면 각주 — 절 제목 · KPI 카드 · Layers 소제목 아래에 붙는 한 줄 설명. 문구는 여기 한 곳에서만 고친다.
+NOTES = {
+    "summary": "하네스 전체 상태를 숫자 다섯 개로 요약한다. 카드 아래 줄이 각 숫자를 세는 방법이다.",
+    "layers": "Claude 가 읽는 설정 두 겹이다. 글로벌은 모든 프로젝트에(~/.claude 또는 CLAUDE_CONFIG_DIR), 프로젝트는 이 저장소에만 적용된다.",
+    "flow": "phase 하나는 승인된 계획 하나, step 하나는 execute.py 가 Claude 를 한 번 실행하는 단위다. 칸 색: 완료 · 대기 · 실패(error) · 멈춤(blocked). 칸에 마우스를 올리면 요약 · 오류가 보인다.",
+    "trace": "요구사항(PRD 의 R-ID)마다 어느 step 이 구현했는지 보여 준다. 빈 행은 아직 계획이 없는 요구사항이다. 아래 표는 step 이 근거로 삼은 설계 결정(ADR)이다.",
+    "scope": "step 마다 고쳐도 되는 파일이다. 범위 밖 변경은 scripts/scope_check.py 가 위반으로 잡는다.",
+    "proposals": "범위 밖 아이디어를 코드로 만들지 않고 적어 둔 곳(docs/PROPOSALS.md)이다. [x] 는 Human 이 승인한 것이고, AI 는 [x] 를 표시하지 않는다.",
+    "health": "하네스 자체를 점검한 결과다. error = 의도대로 동작하지 않는 설정 · warn = 추적이나 검사가 빠진 것 · info = 참고. --strict 로 실행하면 error 가 있을 때 exit 1.",
+}
+KPI_NOTES = (
+    "phases 의 전체 step 중 completed 인 수",
+    "실행에 실패한 step · 사람 결정을 기다리며 멈춘 step — 0 이 아니면 Flow 를 본다",
+    "PRD 의 R-ID 중 어떤 step 이든 「요구사항 ID」로 참조한 비율",
+    "PROPOSALS.md 의 [ ] 대기 · [x] Human 승인 개수",
+    "⑦ Health 에서 찾은 문제 수",
+)
+LAYER_NOTES = {
+    "CRITICAL 규칙": "CLAUDE.md 에서 CRITICAL: 로 시작하는 줄 — 가장 강하게 지켜야 하는 규칙이다.",
+    "Hooks": "특정 시점(event)에 특정 도구(matcher)가 불리면 자동으로 도는 명령이다. 예: Stop = 응답이 끝날 때 검증 · PreToolUse = 실행 전에 위험 명령 차단.",
+    "Commands · Skills": "/ 메뉴로 부르는 절차다. 예: /harness 설계 · /run-phase 실행 · /review 검수.",
+    "Docs (가드레일 주입 대상)": "step 을 실행할 때 Claude 에게 함께 주입되는 문서다(PRD · ARCHITECTURE · ADR).",
+    "Ancestors (상위 폴더 CLAUDE.md)": "상위 폴더의 CLAUDE.md 다. 이 프로젝트 세션에 함께 로드되어 규칙이 섞일 수 있다.",
+}
+
 # step{N}.md / ARCHITECTURE.md에서 찾는 "## 섹션" 제목. 템플릿(harness.md)과 반드시 일치해야 한다.
 
 SEC_REQ = "요구사항 ID"
@@ -542,6 +567,7 @@ h3{font-size:14px;margin:14px 0 6px;color:var(--muted)}
 .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
 .kpi .v{font-size:24px;font-weight:600}
 .kpi .l{color:var(--muted);font-size:12px}
+.kpi-note,.note{color:var(--muted);font-size:12px;margin:2px 0 8px}
 .layers{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
 .scroll{overflow-x:auto}
 .scroll>table{min-width:560px}
@@ -605,8 +631,9 @@ def _render_summary(model: dict, health: list[dict]) -> str:
         (f"{hcount['error']} / {hcount['warn']}", "Health error / warn"),
     ]
     cards = "".join(
-        f'<div class="card kpi"><div class="v">{h(value)}</div><div class="l">{h(label)}</div></div>'
-        for value, label in kpis
+        f'<div class="card kpi"><div class="v">{h(value)}</div><div class="l">{h(label)}</div>'
+        f'<div class="kpi-note">{h(note)}</div></div>'
+        for (value, label), note in zip(kpis, KPI_NOTES)
     )
     return f'<section id="summary"><h2>① Summary</h2><div class="grid">{cards}</div></section>'
 
@@ -648,7 +675,10 @@ def _render_layers(model: dict) -> str:
         )
         blocks.append('<div class="card"><h3 style="margin-top:0">Ancestors (상위 폴더 CLAUDE.md)</h3>'
                       f"<table>{rows}</table></div>")
-    return f'<section id="layers"><h2>② Layers</h2><div class="layers">{"".join(blocks)}</div></section>'
+    html = "".join(blocks)
+    for title, note in LAYER_NOTES.items():
+        html = html.replace(f"{h(title)}</h3>", f'{h(title)}</h3><p class="note">{h(note)}</p>')
+    return f'<section id="layers"><h2>② Layers</h2><div class="layers">{html}</div></section>'
 
 
 def _render_flow(model: dict) -> str:
@@ -780,6 +810,12 @@ def _render_health(health: list[dict]) -> str:
     )
 
 
+def _with_note(section: str) -> str:
+    """절 HTML 의 첫 </h2> 뒤에 NOTES[절 id] 각주를 붙인다."""
+    sec_id = section.split('id="', 1)[1].split('"', 1)[0]
+    return section.replace("</h2>", f'</h2><p class="note">{h(NOTES[sec_id])}</p>', 1)
+
+
 def render(model: dict, health: list[dict]) -> str:
     """model과 health로 단일 HTML 문서를 만든다. CSS는 인라인, 외부 스크립트나 폰트는 쓰지 않는다."""
     nav = "".join(
@@ -788,7 +824,7 @@ def render(model: dict, health: list[dict]) -> str:
             ("scope", "Scope"), ("proposals", "Proposals"), ("health", "Health"),
         ]
     )
-    body = "".join([
+    body = "".join(_with_note(sec) for sec in [
         _render_summary(model, health), _render_layers(model), _render_flow(model),
         _render_trace(model), _render_scope(model), _render_proposals(model), _render_health(health),
     ])
