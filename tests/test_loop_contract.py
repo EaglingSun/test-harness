@@ -1,5 +1,7 @@
 """loop/contract.py — 단계 간 계약 JSON 검증 (ADR-006)."""
 
+import json
+
 import pytest
 
 from loop.contract import ContractError, read_stage, stage_path, write_github_output, write_stage
@@ -31,6 +33,27 @@ def test_read_rejects_missing_key(tmp_path):
     stage_path(tmp_path, "merge").write_text('{"stage": "merge", "merged": true, "noop": false}', encoding="utf-8")
     with pytest.raises(ContractError, match="merge_sha"):
         read_stage(tmp_path, "merge")
+
+
+def review_data(**overrides) -> dict:
+    data = {"stage": "review", "status": "ok", "mode": "stub", "counts": {}, "critical_by_category": {},
+            "event": "COMMENT", "posted": False, "errors": [], "critical_posted": False}
+    data.update(overrides)
+    return data
+
+
+def test_read_rejects_review_without_critical_posted(tmp_path):
+    data = review_data()
+    del data["critical_posted"]
+    stage_path(tmp_path, "review").write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ContractError, match="critical_posted"):
+        read_stage(tmp_path, "review")
+
+
+def test_review_critical_posted_must_be_bool(tmp_path):
+    write_stage(tmp_path, "review", review_data())
+    with pytest.raises(ContractError, match="critical_posted"):
+        write_stage(tmp_path, "review", review_data(critical_posted="true"))
 
 
 def test_read_missing_file(tmp_path):

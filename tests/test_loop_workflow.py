@@ -90,6 +90,12 @@ def test_labeled_runs_only_for_force_block(jobs):
     assert "startsWith(github.event.label.name, 'force-block-')" in cond
 
 
+def test_labeled_runs_for_review_accepted(wf, jobs):
+    # review-accepted 라벨을 붙이면 루프가 다시 돌아 merge 게이트가 사람 확인을 반영한다 (R15)
+    assert "github.event.label.name == 'review-accepted'" in jobs["test"]["if"]
+    assert "github.event.label.name != 'review-accepted'" in wf["concurrency"]["group"]
+
+
 def test_no_secrets_or_dispatch(text):
     assert "secrets." not in text  # GITHUB_TOKEN 만 (ADR-006)
     assert "workflow_dispatch" not in text
@@ -267,6 +273,7 @@ def test_header_lists_force_block_labels(text):
     assert "gh label create" in header
     for label in ("force-block-autofix", "force-block-merge", "force-block-release"):
         assert label in header
+    assert "gh label create review-accepted" in header
 
 
 def test_loop_modules_exist(text):

@@ -1,11 +1,15 @@
 """loop.review real 모드 (R10). fake runner만 쓴다 — 실제 py -m pr_reviewer·gh·claude 실행 금지 (ADR-004)."""
 
+import json
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from loop import review
 from loop.contract import read_stage, write_stage
+from pr_reviewer.aggregate import OWN_PR_CRITICAL
 
 FIXTURE_PLAN = Path(__file__).parent / "fixtures" / "loop" / "review-plan.json"
 
@@ -67,6 +71,29 @@ def test_real_converts_plan(tmp_path):
     assert data["event"] == "REQUEST_CHANGES"
     assert data["errors"] == ["claude 실행 실패: timeout"]
     assert data["posted"] is True
+    assert data["critical_posted"] is True  # fixture event REQUEST_CHANGES
+
+
+def plan_text(event: str, summary: str) -> str:
+    plan = json.loads(FIXTURE_PLAN.read_text(encoding="utf-8"))
+    plan["event"], plan["summary_markdown"] = event, summary
+    return json.dumps(plan, ensure_ascii=False)
+
+
+# critical_posted 는 게시 기준(ADR-005 강등 뒤): REQUEST_CHANGES 거나, 자기 PR 이라 COMMENT 로 바꾼 요약 문구 (R15)
+@pytest.mark.parametrize("event, summary, expected", [
+    ("REQUEST_CHANGES", "## 요약", True),
+    ("COMMENT", f"## 요약\n\n> **{OWN_PR_CRITICAL}**\n", True),
+    ("COMMENT", "## 요약", False),
+], ids=["request_changes", "own_pr_critical", "comment_only"])
+def test_real_critical_posted_from_plan(tmp_path, event, summary, expected):
+    assert run_real(tmp_path, FakeReviewer(plan_text(event, summary))) == 0
+    assert read_stage(tmp_path / "out", "review")["critical_posted"] is expected
+
+
+def test_real_critical_posted_false_without_plan(tmp_path):
+    assert run_real(tmp_path, FakeReviewer(None, code=1, stderr="boom\n")) == 0
+    assert read_stage(tmp_path / "out", "review")["critical_posted"] is False
 
 
 def test_real_process_failure_without_plan(tmp_path):
@@ -125,4 +152,5 @@ def test_stub_unchanged(tmp_path):
         "stage": "review", "status": "ok", "mode": "stub",
         "counts": {"critical": 0, "major": 1, "minor": 1},
         "critical_by_category": {}, "event": "COMMENT", "posted": False, "errors": [],
+        "critical_posted": False,
     }

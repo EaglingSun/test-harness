@@ -17,6 +17,7 @@ UPSTREAM: dict[str, tuple[str, ...]] = {
 AUTOFIX_MAX = 3  # unexpected 이 이 건수 이하면 AUTO_FIX (1차 임시 기준)
 DEGRADED_NOTE = "리뷰 실패 — 리뷰 없이 판정"
 PARTIAL_NOTE = "리뷰 부분 실패 {n}건"  # status ok + errors 1건 이상 (R14) — 표시만, 판정은 그대로
+REVIEW_ACCEPTED = "review-accepted"  # 리뷰 critical 을 사람이 확인했다는 PR 라벨 (R15)
 
 
 def decide_autofix(test: dict) -> tuple[bool, str, str]:
@@ -44,20 +45,23 @@ def _reverify_verdict(reverify: dict) -> tuple[bool, str]:
     return True, "reverify 통과"
 
 
-def decide_merge(reverify: dict, review: dict) -> tuple[bool, str, str, bool]:
-    """reverify · review 계약 → (go, decision, reason, degraded). 리뷰 critical 은 막지 않는다."""
+def decide_merge(reverify: dict, review: dict, accepted: bool = False) -> tuple[bool, str, str, bool]:
+    """reverify · review 계약 → (go, decision, reason, degraded). reverify BLOCK 이 먼저, 그다음
+    게시 기준 리뷰 critical 은 라벨 review-accepted(accepted) 가 없으면 NEEDS_HUMAN (R15)."""
     go, reason = _reverify_verdict(reverify)
-    counts = review.get("counts")
-    critical = counts.get("critical", 0) if isinstance(counts, dict) else 0
-    if critical:
-        reason += f" · 리뷰 critical {critical}건(정적 추정 — 막지 않음)"
+    decision = "PASS" if go else "BLOCK"
+    if go and review["critical_posted"]:
+        if accepted:
+            reason += f" · 리뷰 critical — {REVIEW_ACCEPTED} 로 사람 확인됨"
+        else:
+            go, decision, reason = False, "NEEDS_HUMAN", f"리뷰 critical — 사람 확인 필요(라벨 {REVIEW_ACCEPTED})"
     degraded = review["status"] == "error"
     if degraded:
         reason += f" · {DEGRADED_NOTE}"
     elif review["errors"]:
         degraded = True
         reason += f" · {PARTIAL_NOTE.format(n=len(review['errors']))}"
-    return go, "PASS" if go else "BLOCK", reason, degraded
+    return go, decision, reason, degraded
 
 
 def decide_release(merge: dict, reverify: dict, gate_merge: dict) -> tuple[bool, str, str, bool]:
@@ -69,11 +73,11 @@ def decide_release(merge: dict, reverify: dict, gate_merge: dict) -> tuple[bool,
     return go, "PASS" if go else "BLOCK", reason, degraded
 
 
-def decide(name: str, up: dict[str, dict]) -> tuple[bool, str, str, bool]:
+def decide(name: str, up: dict[str, dict], labels=()) -> tuple[bool, str, str, bool]:
     if name == "autofix":
         return (*decide_autofix(up["test"]), False)
     if name == "merge":
-        return decide_merge(up["reverify"], up["review"])
+        return decide_merge(up["reverify"], up["review"], accepted=REVIEW_ACCEPTED in labels)
     return decide_release(up["merge"], up["reverify"], up["gate-merge"])
 
 
@@ -108,7 +112,7 @@ def main(argv: list[str] | None = None, runner: Runner = run_process) -> int:
     try:
         up = {name: read_stage(out, name) for name in UPSTREAM[args.gate]}  # 없거나 깨졌으면 fail-closed
         labels, state = read_labels(runner, args.repo, args.pr)
-        go, decision, reason, degraded = decide(args.gate, up)
+        go, decision, reason, degraded = decide(args.gate, up, labels)
         switch = f"force-block-{args.gate}"
         forced = switch in labels
         if forced:  # 강제 스위치가 기준보다 먼저

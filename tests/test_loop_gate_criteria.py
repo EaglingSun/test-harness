@@ -19,10 +19,10 @@ def report(stage: str = "reverify", status: str = "ok", unexpected=(), fixed=(),
             "expected_base": [], "expected_head": list(expected_head)}
 
 
-def review(status: str = "ok", critical: int = 0, errors=()) -> dict:
+def review(status: str = "ok", critical: int = 0, errors=(), critical_posted: bool = False) -> dict:
     return {"stage": "review", "status": status, "mode": "stub",
             "counts": {"critical": critical, "major": 0, "minor": 0}, "critical_by_category": {},
-            "event": "COMMENT", "posted": False, "errors": list(errors)}
+            "event": "COMMENT", "posted": False, "errors": list(errors), "critical_posted": critical_posted}
 
 
 def merged(flag: bool = True) -> dict:
@@ -112,10 +112,41 @@ def test_merge_review_all_ok_not_degraded():
     assert "부분 실패" not in reason
 
 
-def test_merge_review_critical_does_not_block():
-    go, decision, reason, _ = gate.decide_merge(report(), review(critical=2))
+def test_merge_raw_critical_without_posted_does_not_block():
+    # 판정 근거는 게시 기준 critical_posted 다. 원천 counts critical 은 막지도 표시하지도 않는다 (R15).
+    go, decision, reason, _ = gate.decide_merge(report(), review(critical=2, critical_posted=False))
     assert (go, decision) == (True, "PASS")
-    assert "critical 2" in reason
+    assert "critical" not in reason
+
+
+def test_merge_critical_posted_needs_human():
+    go, decision, reason, degraded = gate.decide_merge(report(), review(critical_posted=True))
+    assert (go, decision, degraded) == (False, "NEEDS_HUMAN", False)
+    assert reason == "리뷰 critical — 사람 확인 필요(라벨 review-accepted)"
+
+
+def test_merge_critical_posted_accepted_passes():
+    go, decision, reason, _ = gate.decide_merge(report(), review(critical_posted=True), accepted=True)
+    assert (go, decision) == (True, "PASS")
+    assert reason.endswith(" · 리뷰 critical — review-accepted 로 사람 확인됨")
+
+
+def test_merge_accepted_without_critical_adds_nothing():
+    _, _, reason, _ = gate.decide_merge(report(), review(), accepted=True)
+    assert reason == "reverify 통과"
+
+
+def test_merge_reverify_block_beats_critical_posted():
+    go, decision, reason, _ = gate.decide_merge(report(unexpected=[A]), review(critical_posted=True))
+    assert (go, decision) == (False, "BLOCK")
+    assert A in reason and "review-accepted" not in reason
+
+
+def test_merge_critical_posted_keeps_partial_failure_mark():
+    partial = review(errors=["agent security: timeout"], critical_posted=True)
+    go, decision, reason, degraded = gate.decide_merge(report(), partial)
+    assert (go, decision, degraded) == (False, "NEEDS_HUMAN", True)
+    assert reason.endswith("리뷰 부분 실패 1건")
 
 
 # ---- release ----
@@ -183,6 +214,31 @@ def test_main_merge_block_exit_1(out):
     write_stage(out, "review", review())
     assert run_gate(out.parent, "merge") == 1
     assert read_stage(out, "gate-merge")["decision"] == "BLOCK"
+
+
+def test_main_merge_critical_posted_needs_human_exit_1(out):
+    write_stage(out, "reverify", report())
+    write_stage(out, "review", review(critical_posted=True))
+    assert run_gate(out.parent, "merge") == 1
+    data = read_stage(out, "gate-merge")
+    assert data["go"] is False and data["decision"] == "NEEDS_HUMAN" and data["forced"] is False
+
+
+def test_main_merge_review_accepted_label_passes_exit_0(out):
+    write_stage(out, "reverify", report())
+    write_stage(out, "review", review(critical_posted=True))
+    assert run_gate(out.parent, "merge", "review-accepted") == 0
+    data = read_stage(out, "gate-merge")
+    assert data["go"] is True and data["decision"] == "PASS"
+    assert "review-accepted" in data["reason"]
+
+
+def test_main_merge_switch_beats_review_accepted(out):
+    write_stage(out, "reverify", report())
+    write_stage(out, "review", review(critical_posted=True))
+    assert run_gate(out.parent, "merge", "review-accepted", "force-block-merge") == 1
+    data = read_stage(out, "gate-merge")
+    assert data["decision"] == "BLOCK" and data["forced"] is True
 
 
 def test_main_merge_switch_beats_passing_criteria(out):

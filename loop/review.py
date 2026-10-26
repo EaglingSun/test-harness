@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from loop.contract import ContractError, read_stage, write_stage
+from pr_reviewer.aggregate import OWN_PR_CRITICAL
 from pr_reviewer.proc import Runner, run_process
 
 DEFAULT_CURRENT_USER = "github-actions[bot]"  # GITHUB_TOKEN 으로 게시하므로 (ADR-006)
@@ -27,6 +28,7 @@ def _stub() -> dict:
         "stage": "review", "status": "ok", "mode": "stub",
         "counts": {"critical": 0, "major": 1, "minor": 1},
         "critical_by_category": {}, "event": "COMMENT", "posted": False, "errors": [],
+        "critical_posted": False,
     }
 
 
@@ -60,10 +62,12 @@ def _real(args: argparse.Namespace, out: Path, runner: Runner) -> dict:
     critical_by_category: dict[str, int] = {}
     errors: list[str] = []
     event = None
+    critical_posted = False  # 게시 기준(ADR-005 강등 뒤) critical — merge 게이트 판정 근거 (R15)
 
     plan, plan_error = _load_plan(plan_path)
     if plan is not None:
         event = plan.get("event")
+        critical_posted = event == "REQUEST_CHANGES" or OWN_PR_CRITICAL in str(plan.get("summary_markdown") or "")
         for agent in plan["agents"]:
             if agent.get("error") is not None:
                 errors.append(str(agent["error"]))
@@ -85,7 +89,7 @@ def _real(args: argparse.Namespace, out: Path, runner: Runner) -> dict:
         "counts": counts,  # 원천 등급 · 집계 전
         "counts_basis": "agent_raw",
         "critical_by_category": critical_by_category, "event": event,
-        "posted": ok, "errors": errors,
+        "posted": ok, "errors": errors, "critical_posted": critical_posted,
     }
 
 

@@ -47,7 +47,7 @@ UPSTREAM_DATA = {
     "test": {**report_data("test"), "failed": ["s::new"], "unexpected": ["s::new"]},
     "reverify": report_data("reverify"),
     "review": {"stage": "review", "status": "ok", "mode": "stub", "counts": {}, "critical_by_category": {},
-               "event": "COMMENT", "posted": False, "errors": []},
+               "event": "COMMENT", "posted": False, "errors": [], "critical_posted": False},
     "merge": {"stage": "merge", "merged": True, "merge_sha": "9" * 40, "noop": False},
     "gate-merge": {"stage": "gate-merge", "gate": "merge", "go": True, "decision": "PASS", "reason": "r",
                    "forced": False, "degraded": False},

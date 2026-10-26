@@ -16,7 +16,8 @@ _GATE_KEYS = ("stage", "gate", "go", "decision", "reason", "forced", "degraded")
 STAGE_KEYS: dict[str, tuple[str, ...]] = {
     "test": _TEST_KEYS,
     "reverify": _TEST_KEYS,
-    "review": ("stage", "status", "mode", "counts", "critical_by_category", "event", "posted", "errors"),
+    "review": ("stage", "status", "mode", "counts", "critical_by_category", "event", "posted", "errors",
+               "critical_posted"),
     "gate-autofix": _GATE_KEYS,
     "gate-merge": _GATE_KEYS,
     "gate-release": _GATE_KEYS,
@@ -27,7 +28,7 @@ STAGE_KEYS: dict[str, tuple[str, ...]] = {
 
 STATUS_VALUES = ("ok", "error")
 LIST_KEYS = ("failed", "unexpected", "fixed", "missing", "expected_base", "expected_head", "errors")
-BOOL_KEYS = ("go", "forced", "degraded", "posted", "merged", "noop", "prerelease", "reused")
+BOOL_KEYS = ("go", "forced", "degraded", "posted", "merged", "noop", "prerelease", "reused", "critical_posted")
 
 
 def stage_path(out_dir: Path, name: str) -> Path:
