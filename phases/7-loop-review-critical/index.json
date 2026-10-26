@@ -7,7 +7,8 @@
       "name": "review-critical-needs-human",
       "status": "completed",
       "started_at": "2026-10-26T23:53:13+0900",
-      "summary": "review 계약 critical_posted(게시 기준: REQUEST_CHANGES 또는 OWN_PR_CRITICAL 문구) 추가 · merge 게이트가 critical_posted 면 NEEDS_HUMAN, 라벨 review-accepted 면 PASS(reverify BLOCK·강제 스위치 우선) · pr-loop.yml labeled/concurrency 에 review-accepted · 전체 444 passed · red-green-revert: 고치기 전 새 테스트 17 failed → 444 passed → critical_posted 검사 제거 시 5 failed 후 복원"
+      "summary": "review 계약 critical_posted(게시 기준: REQUEST_CHANGES 또는 OWN_PR_CRITICAL 문구) 추가 · merge 게이트가 critical_posted 면 NEEDS_HUMAN, 라벨 review-accepted 면 PASS(reverify BLOCK·강제 스위치 우선) · pr-loop.yml labeled/concurrency 에 review-accepted · 전체 444 passed · red-green-revert: 고치기 전 새 테스트 17 failed → 444 passed → critical_posted 검사 제거 시 5 failed 후 복원",
+      "completed_at": "2026-10-27T00:02:14+0900"
     }
   ],
   "created_at": "2026-10-26T23:53:13+0900"
